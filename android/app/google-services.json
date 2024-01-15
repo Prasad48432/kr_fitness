@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "239850430484",
+    "project_id": "kr-fitness-gym",
+    "storage_bucket": "kr-fitness-gym.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239850430484:android:66a02247f12efae024c701",
+        "android_client_info": {
+          "package_name": "com.example.kr_fitness"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLqAedkzCTuS-2y539Y5r39sIpAHNX3E0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
