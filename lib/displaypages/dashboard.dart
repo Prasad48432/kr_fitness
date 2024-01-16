@@ -819,6 +819,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     int totalMembers = await myFunctions.getTotalMembers(year);
     num totaRevenue = await myFunctions.getTotalRevenue(year);
     num totalRevenueBackYear = await myFunctions.getTotalRevenue(year - 1);
+    String repeatedPackage = await myFunctions.getMaxSubscription(year);
     double percentageChange =
         ((totaRevenue - totalRevenueBackYear) / totalRevenueBackYear) * 100;
     int roundedPercentage = percentageChange.toInt();
@@ -961,7 +962,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               decoration: pw.BoxDecoration(
                 border:
                     pw.Border.all(color: PdfColor.fromHex('000000'), width: 1),
-                borderRadius: pw.BorderRadius.circular(10),
+                borderRadius: pw.BorderRadius.circular(6),
               ),
               child: pw.Padding(
                 padding: pw.EdgeInsets.all(8.0),
@@ -1015,6 +1016,31 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   )),
                 ]),
             pw.SizedBox(height: 15),
+            pw.Container(
+              decoration: pw.BoxDecoration(
+                border:
+                    pw.Border.all(color: PdfColor.fromHex('000000'), width: 1),
+                borderRadius: pw.BorderRadius.circular(6),
+              ),
+              child: pw.Padding(
+                  padding: pw.EdgeInsets.all(8.0),
+                  child: pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Text('members liked',
+                            style: pw.TextStyle(
+                                fontSize: 15,
+                                font: ttf,
+                                color: PdfColor.fromHex('000000'))),
+                        pw.SizedBox(width: 5),
+                        pw.Text('$repeatedPackage',
+                            style: pw.TextStyle(
+                                fontSize: 15,
+                                font: ttfsemibold,
+                                color: PdfColor.fromHex('000000'))),
+                      ])),
+            ),
+            pw.SizedBox(height: 10),
             pw.TableHelper.fromTextArray(
               headers: ['Package Name', 'Count'],
               cellAlignment: pw.Alignment.center,
@@ -1041,7 +1067,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
                   )),
                 ]),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 30),
             // Footer
             pw.Container(
               width: double.infinity,

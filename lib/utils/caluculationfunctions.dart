@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:collection';
 
 class CaluculationFunctions {
   Future<int> getTotalMembers(int year) async {
@@ -69,6 +70,40 @@ class CaluculationFunctions {
             .get();
     return snapshot.size;
   }
+
+  Future<String> getMaxSubscription(int year) async {
+  DateTime startDate = DateTime(year, 1, 1);
+  DateTime endDate = DateTime(year, 12, 31);
+  QuerySnapshot<Map<String, dynamic>> snapshot =
+      await FirebaseFirestore.instance
+          .collection('Subscriptions')
+          .where(
+            'timestamp',
+            isGreaterThanOrEqualTo: startDate,
+            isLessThan: endDate,
+          )
+          .get();
+
+  // Use a Map to count occurrences of each 'package'
+  Map<String, int> packageCounts = HashMap();
+
+  // Iterate through documents
+  snapshot.docs.forEach((doc) {
+    // Assuming 'package' is a field in your document
+    String package = doc.data()['package'];
+
+    // Update count in the map
+    packageCounts.update(package, (count) => count + 1, ifAbsent: () => 1);
+  });
+
+  // Find the package with the maximum count
+  String mostRepeatedPackage = packageCounts.entries.fold(
+    '',
+    (prev, entry) => entry.value > (packageCounts[prev] ?? 0) ? entry.key : prev,
+  );
+
+  return mostRepeatedPackage;
+}
 
   Future<List<Map<String, dynamic>>> fetchMonthlyData(int year) async {
     try {

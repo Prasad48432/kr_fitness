@@ -16,6 +16,8 @@ class _PieChartPageState extends State<PieChartPage> {
   List<String> _packageNames = [];
   String? _touchedPackageName = '';
   String? _highestPackage = '';
+  int currentYear = DateTime.now().year;
+  int selectedYear = DateTime.now().year;
 
   // Define a list of predefined colors
   List<Color> predefinedColors = [
@@ -39,7 +41,8 @@ class _PieChartPageState extends State<PieChartPage> {
   }
 
   Future<void> fetchDataForPieChart() async {
-    // Fetch package names from 'Packages' collection
+    DateTime startDate = DateTime(selectedYear, 1, 1);
+    DateTime endDate = DateTime(selectedYear, 12, 31);
     QuerySnapshot packageSnapshot =
         await FirebaseFirestore.instance.collection('Packages').get();
 
@@ -47,8 +50,14 @@ class _PieChartPageState extends State<PieChartPage> {
         packageSnapshot.docs.map((doc) => doc['name'] as String).toList();
 
     // Fetch and count the occurrences of each package in 'Subscriptions' collection
-    QuerySnapshot subscriptionSnapshot =
-        await FirebaseFirestore.instance.collection('Subscriptions').get();
+    QuerySnapshot subscriptionSnapshot = await FirebaseFirestore.instance
+        .collection('Subscriptions')
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: startDate,
+          isLessThanOrEqualTo: endDate,
+        )
+        .get();
 
     Map<String, int> packageCounts = {};
 
@@ -103,6 +112,50 @@ class _PieChartPageState extends State<PieChartPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Wrap(
+                      spacing: 8.0,
+                      children: [
+                        ChoiceChip(
+                          shape: StadiumBorder(),
+                          label: Text((currentYear - 2).toString()),
+                          selected: selectedYear == currentYear - 2,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                selectedYear = currentYear - 2;
+                                fetchDataForPieChart();
+                              });
+                            }
+                          },
+                        ),
+                        ChoiceChip(
+                          shape: StadiumBorder(),
+                          label: Text((currentYear - 1).toString()),
+                          selected: selectedYear == currentYear - 1,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                selectedYear = currentYear - 1;
+                                fetchDataForPieChart();
+                              });
+                            }
+                          },
+                        ),
+                        ChoiceChip(
+                          shape: StadiumBorder(),
+                          label: Text(currentYear.toString()),
+                          selected: selectedYear == currentYear,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                selectedYear = currentYear;
+                                fetchDataForPieChart();
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                     SizedBox(
                       height: 10,
                     ),
@@ -162,32 +215,6 @@ class _PieChartPageState extends State<PieChartPage> {
                         )),
                     SizedBox(
                       height: 10,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Wrap(
-                        direction: Axis.horizontal,
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        children: _packageNames.map((packageName) {
-                          int index = _packageNames.indexOf(packageName);
-                          return Row(
-                            children: [
-                              Container(
-                                width: 20,
-                                height: 20,
-                                color: predefinedColors[
-                                    index % predefinedColors.length],
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                packageName,
-                                style: TextStyle(fontSize: 15),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                      ),
                     ),
                   ],
                 ),
