@@ -658,6 +658,9 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                           ),
                   ),
                 ),
+                SizedBox(
+                  height: 18,
+                )
               ],
             ),
           ),

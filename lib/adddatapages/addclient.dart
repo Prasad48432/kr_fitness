@@ -108,7 +108,8 @@ class _AddClientState extends State<AddClient> {
             ),
             title: const Text(
               'Add Member',
-              style: TextStyle(color: Colors.black),
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
             ),
             backgroundColor: Colors.white),
         body: SingleChildScrollView(
@@ -526,12 +527,14 @@ class _AddClientState extends State<AddClient> {
                           )
                         : const Text(
                             "Add Member",
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
                           ),
                   ),
                 ),
                 SizedBox(
-                  height: 15,
+                  height: 20,
                 )
               ]),
             ),
