@@ -82,7 +82,7 @@ class _ClientPaymentsState extends State<ClientPayments> {
                   ChoiceChip(
                     label: const Text('Today'),
                     selected: _todaySelected,
-                    selectedColor: const Color.fromARGB(255, 102, 135, 143),
+                    selectedColor: Color.fromARGB(255, 135, 181, 193),
                     onSelected: (value) {
                       setState(() {
                         _todaySelected = value;
@@ -96,7 +96,7 @@ class _ClientPaymentsState extends State<ClientPayments> {
                   ChoiceChip(
                     label: const Text('Week'),
                     selected: _weekSelected,
-                    selectedColor: const Color.fromARGB(255, 102, 135, 143),
+                    selectedColor: Color.fromARGB(255, 135, 181, 193),
                     onSelected: (value) {
                       setState(() {
                         _todaySelected = false;
@@ -110,7 +110,7 @@ class _ClientPaymentsState extends State<ClientPayments> {
                   ChoiceChip(
                     label: const Text('Month'),
                     selected: _monthSelected,
-                    selectedColor: const Color.fromARGB(255, 102, 135, 143),
+                    selectedColor: Color.fromARGB(255, 135, 181, 193),
                     onSelected: (value) {
                       setState(() {
                         _todaySelected = false;
@@ -124,7 +124,7 @@ class _ClientPaymentsState extends State<ClientPayments> {
                   ChoiceChip(
                     label: const Text('Year'),
                     selected: _yearSelected,
-                    selectedColor: const Color.fromARGB(255, 102, 135, 143),
+                    selectedColor: Color.fromARGB(255, 135, 181, 193),
                     onSelected: (value) {
                       setState(() {
                         _todaySelected = false;
@@ -142,7 +142,7 @@ class _ClientPaymentsState extends State<ClientPayments> {
                           : 'Filter',
                     ),
                     selected: _customSelected,
-                    selectedColor: const Color.fromARGB(255, 102, 135, 143),
+                    selectedColor: Color.fromARGB(255, 135, 181, 193),
                     onSelected: (value) {
                       _showDateRangePicker();
                       setState(() {

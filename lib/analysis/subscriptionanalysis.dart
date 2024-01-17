@@ -18,6 +18,8 @@ class _PieChartPageState extends State<PieChartPage> {
   String? _highestPackage = '';
   int currentYear = DateTime.now().year;
   int selectedYear = DateTime.now().year;
+  bool ischartvisible = true;
+  int totalsubscriptionscount = 0;
 
   // Define a list of predefined colors
   List<Color> predefinedColors = [
@@ -41,66 +43,87 @@ class _PieChartPageState extends State<PieChartPage> {
   }
 
   Future<void> fetchDataForPieChart() async {
-    DateTime startDate = DateTime(selectedYear, 1, 1);
-    DateTime endDate = DateTime(selectedYear, 12, 31);
-    QuerySnapshot packageSnapshot =
-        await FirebaseFirestore.instance.collection('Packages').get();
+    try {
+      DateTime startDate = DateTime(selectedYear, 1, 1);
+      DateTime endDate = DateTime(selectedYear, 12, 31);
 
-    _packageNames =
-        packageSnapshot.docs.map((doc) => doc['name'] as String).toList();
+      // Fetch 'Packages' data
+      QuerySnapshot packageSnapshot =
+          await FirebaseFirestore.instance.collection('Packages').get();
 
-    // Fetch and count the occurrences of each package in 'Subscriptions' collection
-    QuerySnapshot subscriptionSnapshot = await FirebaseFirestore.instance
-        .collection('Subscriptions')
-        .where(
-          'timestamp',
-          isGreaterThanOrEqualTo: startDate,
-          isLessThanOrEqualTo: endDate,
-        )
-        .get();
+      _packageNames =
+          packageSnapshot.docs.map((doc) => doc['name'] as String).toList();
 
-    Map<String, int> packageCounts = {};
+      // Fetch and count the occurrences of each package in 'Subscriptions' collection
+      QuerySnapshot subscriptionSnapshot = await FirebaseFirestore.instance
+          .collection('Subscriptions')
+          .where(
+            'timestamp',
+            isGreaterThanOrEqualTo: startDate,
+            isLessThanOrEqualTo: endDate,
+          )
+          .get();
 
-    for (var doc in subscriptionSnapshot.docs) {
-      String packageName = doc['package'] as String;
-      packageCounts[packageName] = (packageCounts[packageName] ?? 0) + 1;
-    }
+      Map<String, int> packageCounts = {};
 
-    // Calculate total subscriptions
-    int totalSubscriptions = subscriptionSnapshot.size;
-
-    // Convert data to PieChartSectionData with predefined colors and rounded percentages as title
-    _sections = _packageNames.asMap().entries.map((entry) {
-      String packageName = entry.value;
-      int count = packageCounts[packageName] ?? 0;
-      int percentage = ((count / totalSubscriptions) * 100).toInt();
-
-      return PieChartSectionData(
-        value: percentage.toDouble(),
-        title: '$percentage%',
-        color: predefinedColors[entry.key % predefinedColors.length],
-        radius: 100,
-        titleStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
-      );
-    }).toList();
-    // Find the package with the highest percentage
-    int maxPercentage = _sections.isNotEmpty ? _sections[0].value.toInt() : 0;
-    int maxIndex = 0;
-
-    for (int i = 1; i < _sections.length; i++) {
-      if (_sections[i].value.toInt() > maxPercentage) {
-        maxPercentage = _sections[i].value.toInt();
-        maxIndex = i;
+      for (var doc in subscriptionSnapshot.docs) {
+        String packageName = doc['package'] as String;
+        packageCounts[packageName] = (packageCounts[packageName] ?? 0) + 1;
       }
-    }
 
-    setState(() {
-      _highestPackage = _packageNames[maxIndex];
-    });
+      // Calculate total subscriptions
+      int totalSubscriptions = subscriptionSnapshot.size;
+
+      setState(() {
+        totalsubscriptionscount = totalSubscriptions;
+      });
+
+      // Check if totalSubscriptions is not zero before calculating percentages
+      if (totalSubscriptions != 0) {
+        // Convert data to PieChartSectionData with predefined colors and rounded percentages as title
+        _sections = _packageNames.asMap().entries.map((entry) {
+          String packageName = entry.value;
+          int count = packageCounts[packageName] ?? 0;
+          int percentage = ((count / totalSubscriptions) * 100).toInt();
+
+          return PieChartSectionData(
+            value: percentage.toDouble(),
+            title: '$percentage%',
+            color: predefinedColors[entry.key % predefinedColors.length],
+            radius: 100,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          );
+        }).toList();
+
+        // Find the package with the highest percentage
+        int maxPercentage =
+            _sections.isNotEmpty ? _sections[0].value.toInt() : 0;
+        int maxIndex = 0;
+
+        for (int i = 1; i < _sections.length; i++) {
+          if (_sections[i].value.toInt() > maxPercentage) {
+            maxPercentage = _sections[i].value.toInt();
+            maxIndex = i;
+          }
+        }
+
+        setState(() {
+          _highestPackage = _packageNames[maxIndex];
+          ischartvisible = true;
+        });
+      } else {
+        // Handle the case when totalSubscriptions is zero
+        setState(() {
+          ischartvisible = false;
+        });
+      }
+    } catch (e) {
+      print('error is $e');
+    }
   }
 
   @override
@@ -159,27 +182,30 @@ class _PieChartPageState extends State<PieChartPage> {
                     SizedBox(
                       height: 10,
                     ),
-                    SizedBox(
-                      height: 300,
-                      child: PieChart(
-                        PieChartData(
-                          sections: _sections,
-                          borderData: FlBorderData(show: false),
-                          centerSpaceRadius: 50,
-                          sectionsSpace: 4,
-                          centerSpaceColor: Colors.white,
-                          pieTouchData: PieTouchData(
-                            touchCallback:
-                                (FlTouchEvent event, pieTouchResponse) {
-                              if (pieTouchResponse?.touchedSection != null) {
-                                int touchedIndex = pieTouchResponse!
-                                    .touchedSection!.touchedSectionIndex;
-                                setState(() {
-                                  _touchedPackageName =
-                                      _packageNames[touchedIndex];
-                                });
-                              }
-                            },
+                    Visibility(
+                      visible: ischartvisible,
+                      child: SizedBox(
+                        height: 300,
+                        child: PieChart(
+                          PieChartData(
+                            sections: _sections,
+                            borderData: FlBorderData(show: false),
+                            centerSpaceRadius: 50,
+                            sectionsSpace: 4,
+                            centerSpaceColor: Colors.white,
+                            pieTouchData: PieTouchData(
+                              touchCallback:
+                                  (FlTouchEvent event, pieTouchResponse) {
+                                if (pieTouchResponse?.touchedSection != null) {
+                                  int touchedIndex = pieTouchResponse!
+                                      .touchedSection!.touchedSectionIndex;
+                                  setState(() {
+                                    _touchedPackageName =
+                                        _packageNames[touchedIndex];
+                                  });
+                                }
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -188,28 +214,45 @@ class _PieChartPageState extends State<PieChartPage> {
                       height: 20,
                     ),
                     Visibility(
-                        visible: _touchedPackageName != null,
+                        visible: _touchedPackageName != null && ischartvisible,
                         child: Text(
                           '$_touchedPackageName',
                           style: TextStyle(
                               fontSize: 15, fontWeight: FontWeight.w500),
                         )),
+                    SizedBox(
+                      height: 20,
+                    ),
                     Visibility(
-                        visible: _highestPackage != null,
+                        visible: _highestPackage != null && ischartvisible,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Text(
+                            'Total subscriptions took : $totalsubscriptionscount',
+                            style: TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w500),
+                          ),
+                        )),
+                    Visibility(
+                        visible: _highestPackage != null && ischartvisible,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: Text(
+                            'Members liked "$_highestPackage"',
+                            style: TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w500),
+                          ),
+                        )),
+                    Visibility(
+                        visible: !ischartvisible,
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: Colors.black, width: 1)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                'Members liked "$_highestPackage"',
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.w500),
-                              ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'No Details Found',
+                              style: TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w500),
                             ),
                           ),
                         )),

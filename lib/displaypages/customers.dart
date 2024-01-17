@@ -94,6 +94,12 @@ class _CustomersState extends State<Customers> {
                         prefixIcon: const Icon(LineIcons.search),
                         hintText: 'Search...',
                         focusColor: Colors.black,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                          borderSide: BorderSide(
+                              color: AppColors
+                                  .primaryBackground), // Set the color you want
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
                           borderSide: const BorderSide(),
@@ -110,7 +116,7 @@ class _CustomersState extends State<Customers> {
                   IconButton(
                     icon: const Icon(
                       Icons.clear,
-                      color: Colors.grey,
+                      color: Colors.black54,
                     ),
                     onPressed: () {
                       setState(() {
