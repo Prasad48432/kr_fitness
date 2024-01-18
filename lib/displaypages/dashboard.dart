@@ -23,6 +23,7 @@ import 'package:kr_fitness/displaypages/overduecustomers.dart';
 import 'package:kr_fitness/displaypages/packageoffers.dart';
 import 'package:kr_fitness/displaypages/packages.dart';
 import 'package:kr_fitness/displaypages/pendingpayments.dart';
+import 'package:kr_fitness/displaypages/personaltrainingclients.dart';
 import 'package:kr_fitness/utils/color.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:open_file/open_file.dart';
@@ -1951,6 +1952,32 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                               builder: (context) => const Customers(
                                 fromHome: true,
                               ),
+                            ),
+                          );
+                          _scaffoldKey.currentState?.closeDrawer();
+                        },
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 5),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 250, 250, 250),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        title: const Text(
+                          'Personal Training',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                        leading: const Icon(
+                          Icons.supervisor_account_outlined,
+                          color: Colors.black,
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const PersonalTrainingClients(),
                             ),
                           );
                           _scaffoldKey.currentState?.closeDrawer();

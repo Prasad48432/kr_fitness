@@ -141,6 +141,7 @@ class _AddPackageState extends State<AddPackage> {
                           'name': name,
                           'amount': amount,
                           'months': months,
+                          'status': true,
                         };
                         _reference.add(dataToSend).then((value) {
                           Toast.show(

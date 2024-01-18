@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -193,33 +195,39 @@ class _PieChartPageState extends State<PieChartPage> {
                             centerSpaceRadius: 50,
                             sectionsSpace: 4,
                             centerSpaceColor: Colors.white,
-                            pieTouchData: PieTouchData(
-                              touchCallback:
-                                  (FlTouchEvent event, pieTouchResponse) {
-                                if (pieTouchResponse?.touchedSection != null) {
-                                  int touchedIndex = pieTouchResponse!
-                                      .touchedSection!.touchedSectionIndex;
-                                  setState(() {
-                                    _touchedPackageName =
-                                        _packageNames[touchedIndex];
-                                  });
-                                }
-                              },
-                            ),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      height: 20,
-                    ),
                     Visibility(
-                        visible: _touchedPackageName != null && ischartvisible,
-                        child: Text(
-                          '$_touchedPackageName',
-                          style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w500),
-                        )),
+                      visible: _highestPackage != null && ischartvisible,
+                      child: Container(
+                        color: Colors.white,
+                        padding: EdgeInsets.all(8),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: _packageNames
+                              .asMap()
+                              .entries
+                              .map(
+                                (entry) => Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 16,
+                                      height: 16,
+                                      color: predefinedColors[
+                                          entry.key % predefinedColors.length],
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(entry.value),
+                                  ],
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ),
                     SizedBox(
                       height: 20,
                     ),
@@ -229,16 +237,6 @@ class _PieChartPageState extends State<PieChartPage> {
                           padding: const EdgeInsets.all(4.0),
                           child: Text(
                             'Total subscriptions took : $totalsubscriptionscount',
-                            style: TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w500),
-                          ),
-                        )),
-                    Visibility(
-                        visible: _highestPackage != null && ischartvisible,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Text(
-                            'Members liked "$_highestPackage"',
                             style: TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w500),
                           ),

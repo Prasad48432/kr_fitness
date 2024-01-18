@@ -39,9 +39,12 @@ class _PersonalTrainingState extends State<PersonalTraining> {
       body: Center(
         child: Column(
           children: [
-            Text(
-              '${widget.name}',
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                '${widget.name}',
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+              ),
             ),
             Expanded(
               child: StreamBuilder<List<Map<String, dynamic>>>(
