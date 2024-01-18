@@ -277,75 +277,53 @@ class _AddClientState extends State<AddClient> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child:
-                      // Center(
-                      //   child: GestureDetector(
-                      //     onTap: () async {
-                      //       await showCupertinoModalPopup<void>(
-                      //         context: context,
-                      //         builder: (_) {
-                      //           final size = MediaQuery.of(context).size;
-                      //           return Container(
-                      //             decoration: const BoxDecoration(
-                      //               color: Colors.white,
-                      //               borderRadius: BorderRadius.only(
-                      //                 topLeft: Radius.circular(12),
-                      //                 topRight: Radius.circular(12),
-                      //               ),
-                      //             ),
-                      //             height: size.height * 0.27,
-                      //             child: CupertinoDatePicker(
-                      //               mode: CupertinoDatePickerMode.date,
-                      //               onDateTimeChanged: (value) {
-                      //                 date = value;
-                      //                 int age = calculateAge(value);
-                      //                 _formKey.currentState!
-                      //                     .patchValue({'age': age.toString()});
-                      //                 setState(() {});
-                      //               },
-                      //             ),
-                      //           );
-                      //         },
-                      //       );
-                      //     },
-                      //     child: Container(
-                      //       height: 60,
-                      //       width: MediaQuery.of(context).size.width,
-                      //       decoration: BoxDecoration(
-                      //           border: Border.all(color: Colors.black),
-                      //           borderRadius: BorderRadius.circular(4)),
-                      //       child: Row(
-                      //         mainAxisAlignment: MainAxisAlignment.start,
-                      //         children: [
-                      //           SizedBox(
-                      //             width: 10,
-                      //           ),
-                      //           Icon(
-                      //             LineIcons.calendar,
-                      //             color: Colors.black87,
-                      //           ),
-                      //           SizedBox(
-                      //             width: 10,
-                      //           ),
-                      //           if (date == null) ...[
-                      //             const Text(
-                      //               'Select Date',
-                      //               style: TextStyle(
-                      //                 fontSize: 16,
-                      //               ),
-                      //             ),
-                      //           ] else ...[
-                      //             Text(
-                      //               DateFormat('d MMM yyyy').format(date!),
-                      //               style: TextStyle(fontSize: 16),
-                      //             ),
-                      //           ],
-                      //         ],
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      FormBuilderDateTimePicker(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          'Personal Training', // Your desired text
+                          style: TextStyle(
+                            color: Colors.black, // Customize the text color
+                            fontSize: 16, // Customize the text size
+                            fontWeight:
+                                FontWeight.normal, // Customize the text weight
+                          ),
+                        ),
+                      ),
+                      FormBuilderRadioGroup(
+                        decoration: InputDecoration(
+                          // Set the border to none
+                          border: InputBorder.none,
+                        ),
+                        name: 'personaltraining',
+                        validator: FormBuilderValidators.required(
+                          errorText: 'please select a option',
+                        ),
+                        options: [
+                          FormBuilderFieldOption(
+                            value: true,
+                            child: Text(
+                              'Yes',
+                              style: customOptionStyle2,
+                            ),
+                          ),
+                          FormBuilderFieldOption(
+                            value: false,
+                            child: Text(
+                              'No',
+                              style: customOptionStyle2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: FormBuilderDateTimePicker(
                     name: 'date',
                     onChanged: (DateTime? newDate) {
                       if (newDate != null) {
@@ -467,6 +445,7 @@ class _AddClientState extends State<AddClient> {
                           setState(() {
                             isLoading = true;
                           });
+                          FocusScope.of(context).unfocus();
                           await Future.delayed(Duration(seconds: 1));
 
                           String name =
@@ -481,6 +460,8 @@ class _AddClientState extends State<AddClient> {
                           int contact = int.parse(_formKey
                               .currentState!.value['contact']
                               .toString());
+                          bool personaltraining =
+                              _formKey.currentState!.value['personaltraining'];
 
                           Map<String, dynamic> dataToSend = {
                             'name': name,
@@ -489,6 +470,7 @@ class _AddClientState extends State<AddClient> {
                             'age': age,
                             'image': imageUrl,
                             'contact': contact,
+                            'personaltraining': personaltraining,
                             'timestamp': FieldValue.serverTimestamp(),
                           };
                           _reference.add(dataToSend).then((value) {

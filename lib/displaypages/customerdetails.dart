@@ -8,6 +8,7 @@ import 'package:kr_fitness/adddatapages/addclientsubscription.dart';
 import 'package:kr_fitness/displaypages/clientspecificpayments.dart';
 import 'package:kr_fitness/adddatapages/editpayment.dart';
 import 'package:kr_fitness/displaypages/dashboard.dart';
+import 'package:kr_fitness/displaypages/personaltraining.dart';
 import 'package:kr_fitness/utils/color.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -539,12 +540,24 @@ class _CustomerDetailsState extends State<CustomerDetails> {
     Timestamp dob = data['dob'];
     int contact = data['contact'];
     String gender = data['gender'];
+    bool personalTraining = data['personaltraining'];
     DateTime? subscriptionEndDate;
     int pendingamount = 0;
     String datenew = DateFormat('dd MMM yyyy').format(dob.toDate());
     String role = GlobalVariablesUse.role;
     Color deleteColor = role == 'Owner' ? Colors.red : Colors.grey;
     Color textColor = role == 'Owner' ? Colors.black : Colors.grey;
+
+    DateTime dobDateTime = dob.toDate();
+
+// Calculate the difference in years
+    DateTime currentDate = DateTime.now();
+    int CurrentAge = currentDate.year - dobDateTime.year;
+    if (currentDate.month < dobDateTime.month ||
+        (currentDate.month == dobDateTime.month &&
+            currentDate.day < dobDateTime.day)) {
+      CurrentAge--;
+    }
 
     fetchSubscriptionEndDate(widget.id).then(
       (DateTime? endDate) {
@@ -693,9 +706,44 @@ class _CustomerDetailsState extends State<CustomerDetails> {
               Text('$datenew',
                   style: const TextStyle(fontWeight: FontWeight.w500)),
             ]),
-            const SizedBox(
-              height: 7,
+            SizedBox(
+              height: 5,
             ),
+            Visibility(
+                visible: personalTraining,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PersonalTraining(
+                                  id: widget.id,
+                                  name: widget.name,
+                                  gender: gender,
+                                  age: CurrentAge,
+                                )));
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Personal Training',
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue),
+                      ),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Icon(
+                        LineIcons.arrowRight,
+                        size: 20,
+                        color: Colors.blue,
+                      )
+                    ],
+                  ),
+                )),
             Container(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),

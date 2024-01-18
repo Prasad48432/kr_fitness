@@ -573,6 +573,8 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                         int transactionid = int.parse(_formKey
                             .currentState!.value['transactionid']
                             .toString());
+                        
+                        FocusScope.of(context).unfocus();
 
                         await Future.delayed(Duration(seconds: 1));
 
