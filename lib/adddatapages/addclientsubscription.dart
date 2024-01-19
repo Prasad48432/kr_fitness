@@ -49,6 +49,9 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
   bool showPackageError = false;
   bool isLoading = false;
   String selectedPaymentMode = 'GooglePay';
+  bool ispersonaltrainingPT = false;
+  final CollectionReference clientsCollection =
+      FirebaseFirestore.instance.collection('Clients');
 
   List<Map<String, dynamic>> packages = [];
 
@@ -573,7 +576,7 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                         int transactionid = int.parse(_formKey
                             .currentState!.value['transactionid']
                             .toString());
-                        
+
                         FocusScope.of(context).unfocus();
 
                         await Future.delayed(Duration(seconds: 1));
@@ -612,6 +615,22 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                             duration: Toast.lengthShort,
                             gravity: Toast.bottom,
                           );
+
+                          if (ispersonaltrainingPT) {
+                            try {
+                              // Replace 'widget.id' with the actual document ID
+                              String clientId = widget.id;
+
+                              // Update the 'personaltraining' field to true
+                              await clientsCollection
+                                  .doc(clientId)
+                                  .update({'personaltraining': true});
+                            } catch (e) {
+                              // Handle any errors that might occur during the update
+                              print(
+                                  'Error updating personal training field: $e');
+                            }
+                          }
 
                           // Get the document ID
                           String subscriptionid = documentReference.id;
@@ -764,8 +783,10 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
 
       int amount = selectedPackageDetails['amount'];
       int months = selectedPackageDetails['months'];
+      bool isPersonalTraining = selectedPackageDetails['personaltraining'];
       setState(() {
         showPackageError = false;
+        ispersonaltrainingPT = isPersonalTraining;
       });
 
       if (offerConditions != null) {

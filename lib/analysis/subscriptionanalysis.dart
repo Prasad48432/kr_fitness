@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -16,7 +14,6 @@ class PieChartPage extends StatefulWidget {
 class _PieChartPageState extends State<PieChartPage> {
   List<PieChartSectionData> _sections = [];
   List<String> _packageNames = [];
-  String? _touchedPackageName = '';
   String? _highestPackage = '';
   int currentYear = DateTime.now().year;
   int selectedYear = DateTime.now().year;
@@ -35,7 +32,10 @@ class _PieChartPageState extends State<PieChartPage> {
     const Color(0xFFEF9595),
     const Color(0xFF545B77),
     const Color(0xFF867070),
-    const Color(0xFFEA8FEA)
+    const Color(0xFFEA8FEA),
+    const Color(0xFF43766C),
+    const Color(0xFF2D3250),
+
   ];
 
   @override

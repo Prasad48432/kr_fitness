@@ -18,6 +18,18 @@ class _AddPackageState extends State<AddPackage> {
   final _formKey = GlobalKey<FormBuilderState>();
   final CollectionReference _reference =
       FirebaseFirestore.instance.collection('Packages');
+
+  final TextStyle customOptionStyle = TextStyle(
+    color: Colors.black, // Change this to your desired color
+    fontSize: 16, // Customize the font size
+    fontWeight: FontWeight.normal, // Customize the font weight
+  );
+
+  final TextStyle customOptionStyle2 = TextStyle(
+    color: Colors.black, // Change this to your desired color
+    fontSize: 16, // Customize the font size
+    fontWeight: FontWeight.normal, // Customize the font weight
+  );
   @override
   Widget build(BuildContext context) {
     ToastContext().init(context);
@@ -49,6 +61,52 @@ class _AddPackageState extends State<AddPackage> {
                       borderSide: BorderSide(color: Colors.black),
                     ),
                   ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        'Personal Training', // Your desired text
+                        style: TextStyle(
+                          color: Colors.black, // Customize the text color
+                          fontSize: 16, // Customize the text size
+                          fontWeight:
+                              FontWeight.normal, // Customize the text weight
+                        ),
+                      ),
+                    ),
+                    FormBuilderRadioGroup(
+                      decoration: InputDecoration(
+                        // Set the border to none
+                        border: InputBorder.none,
+                      ),
+                      name: 'personaltraining',
+                      validator: FormBuilderValidators.required(
+                        errorText: 'please select a option',
+                      ),
+                      options: [
+                        FormBuilderFieldOption(
+                          value: true,
+                          child: Text(
+                            'Yes',
+                            style: customOptionStyle2,
+                          ),
+                        ),
+                        FormBuilderFieldOption(
+                          value: false,
+                          child: Text(
+                            'No',
+                            style: customOptionStyle2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -130,6 +188,9 @@ class _AddPackageState extends State<AddPackage> {
                       int amount = int.parse(
                           _formKey.currentState!.value['amount'].toString());
 
+                      bool personaltraining =
+                          _formKey.currentState!.value['personaltraining'];
+
                       if (isContactDuplicate) {
                         Toast.show(
                           "Package name already exists",
@@ -142,6 +203,7 @@ class _AddPackageState extends State<AddPackage> {
                           'amount': amount,
                           'months': months,
                           'status': true,
+                          'personaltraining': personaltraining,
                         };
                         _reference.add(dataToSend).then((value) {
                           Toast.show(

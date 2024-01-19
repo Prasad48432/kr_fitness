@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/intl.dart';
 import 'package:kr_fitness/adddatapages/addclientsubscription.dart';
@@ -35,7 +36,8 @@ class CustomerDetails extends StatefulWidget {
   State<CustomerDetails> createState() => _CustomerDetailsState();
 }
 
-class _CustomerDetailsState extends State<CustomerDetails> {
+class _CustomerDetailsState extends State<CustomerDetails>
+    with SingleTickerProviderStateMixin {
   late Future<DocumentSnapshot<Map<String, dynamic>>> clientDetails;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool showplus = true;
@@ -53,6 +55,8 @@ class _CustomerDetailsState extends State<CustomerDetails> {
 
   String packageNameforRenewal = '';
   int daysLeftforRenewal = 0;
+  late TabController _tabController;
+  Map<String, dynamic> dataPT = {};
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -64,6 +68,7 @@ class _CustomerDetailsState extends State<CustomerDetails> {
     _paymentPendingFuture = fetchPaymentPending(widget.id);
     updateButtonColor();
     fetchSubscriptionDetailsforRenewal();
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>> getClientDetails() async {
@@ -104,6 +109,25 @@ class _CustomerDetailsState extends State<CustomerDetails> {
       }
     } catch (e) {
       // Handle the error
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> fetchPersonalTrainingData() {
+    try {
+      return FirebaseFirestore.instance
+          .collection('Clients')
+          .doc(widget.id)
+          .collection('PersonalTraining')
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .map((snapshot) {
+        List<Map<String, dynamic>> data =
+            snapshot.docs.map((doc) => doc.data()).toList();
+        return data;
+      });
+    } catch (e) {
+      print('Error fetching personal training data: $e');
+      return Stream.value([]);
     }
   }
 
@@ -161,25 +185,190 @@ class _CustomerDetailsState extends State<CustomerDetails> {
                 }
               },
             ),
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance
-                  .collection('Subscriptions')
-                  .where('clientid', isEqualTo: widget.id)
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, subscriptionSnapshot) {
-                if (subscriptionSnapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return Container();
-                } else if (subscriptionSnapshot.hasError) {
-                  return Text('Error: ${subscriptionSnapshot.error}');
-                } else {
-                  List<DocumentSnapshot<Map<String, dynamic>>>
-                      subscriptionDocs = subscriptionSnapshot.data!.docs;
-                  return buildSubscriptionDetails(subscriptionDocs);
-                }
-              },
+            Container(
+              width: MediaQuery.of(context).size.width * 0.94,
+              child: TabBar(
+                  controller: _tabController,
+                  physics: const ClampingScrollPhysics(),
+                  dividerColor: Colors.transparent,
+                  labelColor: Colors.black,
+                  padding:
+                      EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 10),
+                  unselectedLabelColor: Colors.black54,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  tabs: [
+                    Tab(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            "Subscriptions",
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Tab(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            "Personal Training",
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ]),
             ),
+            Container(
+              width: MediaQuery.of(context).size.width,
+              height: 400,
+              child: TabBarView(controller: _tabController, children: [
+                SingleChildScrollView(
+                  child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('Subscriptions')
+                        .where('clientid', isEqualTo: widget.id)
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                    builder: (context, subscriptionSnapshot) {
+                      if (subscriptionSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return Container();
+                      } else if (subscriptionSnapshot.hasError) {
+                        return Text('Error: ${subscriptionSnapshot.error}');
+                      } else {
+                        List<DocumentSnapshot<Map<String, dynamic>>>
+                            subscriptionDocs = subscriptionSnapshot.data!.docs;
+                        return buildSubscriptionDetails(subscriptionDocs);
+                      }
+                    },
+                  ),
+                ),
+                SingleChildScrollView(
+                  child: StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: fetchPersonalTrainingData(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                            child: SizedBox(
+                                height: 50,
+                                width: 50,
+                                child: CircularProgressIndicator()));
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (snapshot.data!.isEmpty) {
+                        return Center(child: Text('Member doesnt have PT'));
+                      } else {
+                        List<Map<String, dynamic>> personalTrainingData =
+                            snapshot.data ?? [];
+                        return SizedBox(
+                          height: 400,
+                          child: ListView.builder(
+                            itemCount: personalTrainingData.length,
+                            itemBuilder: (context, index) {
+                              return ProgressCardPT(
+                                age: personalTrainingData[index]['age'],
+                                bmi: personalTrainingData[index]['bmi'],
+                                bfp: personalTrainingData[index]['bfp'],
+                                weight: personalTrainingData[index]['weight'],
+                                height: personalTrainingData[index]['height'],
+                                timestamp: personalTrainingData[index]
+                                    ['timestamp'],
+                                bicepmeasure: personalTrainingData[index]
+                                    ['bicepmeasure'],
+                                waistmeasure: personalTrainingData[index]
+                                    ['waistmeasure'],
+                                chestmeasure: personalTrainingData[index]
+                                    ['chestmeasure'],
+                                index: index,
+                                bfpcolor: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]['bfp'] >
+                                            personalTrainingData[index + 1]
+                                                ['bfp']
+                                        ? Colors.red
+                                        : Colors.green)
+                                    : Colors.black,
+                                bmicolor: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]['bmi'] >
+                                            personalTrainingData[index + 1]
+                                                ['bmi']
+                                        ? Colors.red
+                                        : Colors.green)
+                                    : Colors.black,
+                                waistcolor: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]
+                                                ['waistmeasure'] >
+                                            personalTrainingData[index + 1]
+                                                ['waistmeasure']
+                                        ? Colors.red
+                                        : Colors.green)
+                                    : Colors.black,
+                                bicepcolor: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]
+                                                ['bicepmeasure'] >
+                                            personalTrainingData[index + 1]
+                                                ['bicepmeasure']
+                                        ? Colors.green
+                                        : Colors.red)
+                                    : Colors.black,
+                                bfparrow: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]['bfp'] >
+                                            personalTrainingData[index + 1]
+                                                ['bfp']
+                                        ? '↑'
+                                        : '↓')
+                                    : '',
+                                bmiarrow: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]['bmi'] >
+                                            personalTrainingData[index + 1]
+                                                ['bmi']
+                                        ? '↑'
+                                        : '↓')
+                                    : '',
+                                biceparrow: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]
+                                                ['bicepmeasure'] >
+                                            personalTrainingData[index + 1]
+                                                ['bicepmeasure']
+                                        ? '↑'
+                                        : '↓')
+                                    : '',
+                                waistarrow: index == 0 &&
+                                        personalTrainingData.length > 1
+                                    ? (personalTrainingData[index]
+                                                ['waistmeasure'] >
+                                            personalTrainingData[index + 1]
+                                                ['waistmeasure']
+                                        ? '↑'
+                                        : '↓')
+                                    : '',
+                              );
+                            },
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                )
+              ]),
+            )
           ],
         ),
       ),
@@ -355,6 +544,15 @@ class _CustomerDetailsState extends State<CustomerDetails> {
         if (clientData != null && clientData.containsKey('image')) {
           // Extract the image URL from the client data
           String imageUrl = clientData['image'];
+          await clients
+              .doc(clientId)
+              .collection('PersonalTraining')
+              .get()
+              .then((snapshot) {
+            for (DocumentSnapshot doc in snapshot.docs) {
+              doc.reference.delete();
+            }
+          });
 
           // Delete the client document
           await clients.doc(clientId).delete();
@@ -436,15 +634,6 @@ class _CustomerDetailsState extends State<CustomerDetails> {
 
     return Column(
       children: [
-        showplus
-            ? const Padding(
-                padding: EdgeInsets.all(12.0),
-                child: Text(
-                  'Subscription Details:',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                ),
-              )
-            : Container(),
         ...subscriptionDocs.asMap().entries.map((entry) {
           var index = entry.key;
           var doc = entry.value;
@@ -550,7 +739,7 @@ class _CustomerDetailsState extends State<CustomerDetails> {
 
     DateTime dobDateTime = dob.toDate();
 
-// Calculate the difference in years
+    // Calculate the difference in years
     DateTime currentDate = DateTime.now();
     int CurrentAge = currentDate.year - dobDateTime.year;
     if (currentDate.month < dobDateTime.month ||
@@ -803,28 +992,6 @@ class _CustomerDetailsState extends State<CustomerDetails> {
                       children: [
                         IconButton(
                           icon: Icon(
-                            LineIcons.comment,
-                            size: 30,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            // _handleMessageButtonPress(contact, name,
-                            //     subscriptionEndDate, pendingamount);
-                          },
-                        ),
-                        Text(
-                          'Messsage',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        IconButton(
-                          icon: Icon(
                             LineIcons.reply,
                             color: renewButtonColor,
                             size: 30,
@@ -900,76 +1067,6 @@ class _CustomerDetailsState extends State<CustomerDetails> {
                     packageName: packageName,
                     daysleft: daysleft,
                   )));
-    } else {
-      Toast.show(
-        'Please first add a Subscription',
-        backgroundColor: Colors.red,
-        duration: Toast.lengthShort,
-        gravity: Toast.bottom,
-      );
-    }
-  }
-
-  Future<void> _handleMessageButtonPress(int contact, String name,
-      DateTime? subscriptionEndDate, int? amountpending) async {
-    final int subscriptionCount = await _subscriptionCountFuture;
-    if (subscriptionCount > 0) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Select Message Type'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: paymentMessageButtonColor),
-                        child: const Text('Payment Message'),
-                        onPressed: () {
-                          pendingPayment
-                              ? handlePaymentSmsApi(contact, name,
-                                  subscriptionEndDate, amountpending)
-                              : showPaymentToast();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8), // Add some spacing between buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context); // Close the dialog
-                        },
-                        child: const Text('Subscription Message'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8), // Add some spacing between buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context); // Close the dialog
-                        },
-                        child: const Text('Overdue Message'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      );
     } else {
       Toast.show(
         'Please first add a Subscription',
@@ -1371,7 +1468,6 @@ class ProgressCard extends StatelessWidget {
 
     Color textGreenColor;
     String daysLeftText;
-    print('days left are : $daysLeft');
     if (daysLeft > 10) {
       textGreenColor = Colors.green;
       daysLeftText = '$daysLeft Days left';
@@ -1645,6 +1741,236 @@ class ProgressCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ProgressCardPT extends StatelessWidget {
+  final int age;
+  final double bmi;
+  final double bfp;
+  final double weight;
+  final double height;
+  final Timestamp timestamp;
+  final Color bfpcolor;
+  final Color bmicolor;
+  final Color bicepcolor;
+  final Color waistcolor;
+  final int index;
+  final String bmiarrow;
+  final String bfparrow;
+  final String biceparrow;
+  final String waistarrow;
+  final double bicepmeasure;
+  final double waistmeasure;
+  final double chestmeasure;
+
+  ProgressCardPT({
+    required this.age,
+    required this.bmi,
+    required this.bfp,
+    required this.weight,
+    required this.height,
+    required this.timestamp,
+    required this.bfpcolor,
+    required this.bmicolor,
+    required this.bicepcolor,
+    required this.waistcolor,
+    required this.index,
+    required this.bmiarrow,
+    required this.bfparrow,
+    required this.bicepmeasure,
+    required this.waistmeasure,
+    required this.chestmeasure,
+    required this.biceparrow,
+    required this.waistarrow,
+  });
+
+  String formatDate(DateTime dateTime) {
+    final DateFormat formatter = DateFormat('d MMM yyyy');
+    return formatter.format(dateTime);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, right: 12, top: 8, bottom: 8),
+      child: Card(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(color: Colors.black, width: 1),
+            color: Colors.white,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Center(
+                child: Text(
+                  '#Progress ${index + 1} - ${formatDate(timestamp.toDate())}',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(LineIcons.user, color: Colors.black, size: 16),
+                  const SizedBox(width: 8),
+                  Text('Age :',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$age yrs',
+                          style: TextStyle(fontSize: 16, color: Colors.black)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(LineIcons.rulerVertical, color: Colors.black, size: 16),
+                  const SizedBox(width: 8),
+                  Text('height :',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$height m',
+                          style: TextStyle(fontSize: 16, color: Colors.black)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(LineIcons.weight, color: Colors.black, size: 16),
+                  const SizedBox(width: 8),
+                  Text('weight :',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$weight kg',
+                          style: TextStyle(fontSize: 16, color: Colors.black)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(Icons.monitor_heart_outlined, color: bfpcolor, size: 16),
+                  const SizedBox(width: 8),
+                  Text('Body Fat Percent :',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$bfp% $bfparrow',
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: index == 0 ? bfpcolor : Colors.black)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(Icons.line_weight, color: bmicolor, size: 16),
+                  const SizedBox(width: 8),
+                  Text('Body Mass Index :',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$bmi $bmiarrow',
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: index == 0 ? bmicolor : Colors.black)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/bicep.svg', // Replace with your SVG file path
+                    height: 20,
+                    color: bicepcolor,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Bicep Measure :',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$bicepmeasure $biceparrow',
+                          style: TextStyle(fontSize: 16, color: bicepcolor)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/waist.svg', // Replace with your SVG file path
+                    height: 15,
+                    color: waistcolor,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Waist Measure:',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$waistmeasure $waistarrow',
+                          style: TextStyle(fontSize: 16, color: waistcolor)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/chest.svg', // Replace with your SVG file path
+                    height: 20,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Chest Measure :',
+                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text('$chestmeasure ',
+                          style: TextStyle(fontSize: 16, color: Colors.black)),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

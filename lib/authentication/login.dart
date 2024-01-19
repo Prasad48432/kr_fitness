@@ -24,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         _isLoading = true; // Show progress indicator
       });
+      FocusScope.of(context).unfocus();
 
       Timer(const Duration(seconds: 1), () async {
         try {

@@ -208,7 +208,6 @@ class _PersonalTrainingState extends State<PersonalTraining> {
                     name: widget.name,
                     gender: widget.gender,
                     age: widget.age,
-                    reload: reloadpage,
                   ),
                 ),
               );
