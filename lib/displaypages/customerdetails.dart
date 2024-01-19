@@ -267,7 +267,7 @@ class _CustomerDetailsState extends State<CustomerDetails>
                       } else if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       } else if (snapshot.data!.isEmpty) {
-                        return Center(child: Text('Member doesnt have PT'));
+                        return Center(child: Text('No Details Found'));
                       } else {
                         List<Map<String, dynamic>> personalTrainingData =
                             snapshot.data ?? [];
@@ -920,7 +920,7 @@ class _CustomerDetailsState extends State<CustomerDetails>
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
-                            color: Colors.blue),
+                            color: AppColors.primaryBackground),
                       ),
                       SizedBox(
                         width: 5,
@@ -928,7 +928,7 @@ class _CustomerDetailsState extends State<CustomerDetails>
                       Icon(
                         LineIcons.arrowRight,
                         size: 20,
-                        color: Colors.blue,
+                        color: AppColors.primaryBackground,
                       )
                     ],
                   ),

@@ -40,6 +40,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'dart:async';
 import '../utils/caluculationfunctions.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class Dashboard extends StatefulWidget {
   final VoidCallback onLogout;
@@ -84,11 +85,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   bool _isLoading = false;
   ScrollController _scrollController = ScrollController();
   CaluculationFunctions myFunctions = CaluculationFunctions();
+  final _firebaseMessaging = FirebaseMessaging.instance;
 
   late User? _auth;
   String? uid;
 
   bool isButtonLoading = false;
+  bool notificationsEnabled = true;
 
   @override
   void initState() {
@@ -104,10 +107,40 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     _scrollController = ScrollController();
     _fetchData();
     globalFetch();
+    initNotifications();
   }
 
   Future<void> globalFetch() async {
     await GlobalVariablesUse.initialize();
+  }
+
+  Future<void> initNotifications() async {
+    try {
+      await _firebaseMessaging.requestPermission();
+      final fcmToken = await _firebaseMessaging.getToken();
+
+      // Fetch user role and FCMtoken from Firebase
+      String userUid = FirebaseAuth.instance.currentUser!.uid;
+      var userRolesSnapshot = await FirebaseFirestore.instance
+          .collection('UserRoles')
+          .doc(userUid)
+          .get();
+
+      Map<String, dynamic>? userData = userRolesSnapshot.data();
+
+      if (userData != null) {
+        // Check if FCMtoken field exists
+        if (!userData.containsKey('FCMtoken')) {
+          // Add FCMtoken to the 'UserRoles' document
+          await FirebaseFirestore.instance
+              .collection('UserRoles')
+              .doc(userUid)
+              .update({'FCMtoken': fcmToken});
+        }
+      }
+    } catch (e) {
+      print("Error initializing notifications: $e");
+    }
   }
 
   String getCurrentDate() {
@@ -130,6 +163,38 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   @override
   void dispose() {
     super.dispose();
+  }
+
+  Future<void> fetchNotificationsState() async {
+    try {
+      // Fetch the 'notifications' field from the UserRoles collection
+
+      String userUid = FirebaseAuth.instance.currentUser!.uid;
+      var snapshot = await FirebaseFirestore.instance
+          .collection('UserRoles')
+          .doc(userUid)
+          .get();
+
+      // Update the local state with the fetched value
+      setState(() {
+        notificationsEnabled = snapshot.data()?['notifications'] ?? true;
+      });
+    } catch (e) {
+      print('Error fetching notifications state: $e');
+    }
+  }
+
+  Future<void> updateNotificationsState(bool isEnabled) async {
+    try {
+      // Update the 'notifications' field in the UserRoles collection
+      String userUid = FirebaseAuth.instance.currentUser!.uid;
+      await FirebaseFirestore.instance
+          .collection('UserRoles')
+          .doc(userUid)
+          .update({'notifications': isEnabled});
+    } catch (e) {
+      print('Error updating notifications state: $e');
+    }
   }
 
   @override
@@ -507,27 +572,27 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     size: 25,
                   ),
                 ),
-                AnimatedIconButton(
-                  duration: Duration(milliseconds: 600),
-                  icons: [
-                    AnimatedIconItem(
-                      icon: Icon(
-                        Icons.notifications_outlined,
-                        size: 25,
-                        color: Colors.black,
-                      ),
-                      onPressed: () => print('enabled'),
+                AnimatedSwitcher(
+                  duration: Duration(milliseconds: 500),
+                  child: IconButton(
+                    key: ValueKey<bool>(notificationsEnabled),
+                    icon: Icon(
+                      notificationsEnabled
+                          ? Icons.notifications_on
+                          : Icons.notifications_off,
+                      size: 25,
+                      color: Colors.black,
                     ),
-                    AnimatedIconItem(
-                      icon: Icon(
-                        Icons.notifications_off_outlined,
-                        size: 25,
-                        color: Colors.black,
-                      ),
-                      onPressed: () => print('disabled'),
-                    ),
-                  ],
-                ),
+                    onPressed: () {
+                      // Toggle the notification state
+                      setState(() {
+                        notificationsEnabled = !notificationsEnabled;
+                        // Update the notifications state in the database
+                        updateNotificationsState(notificationsEnabled);
+                      });
+                    },
+                  ),
+                )
               ],
             ),
           ],

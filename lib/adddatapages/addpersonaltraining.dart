@@ -58,7 +58,7 @@ class _AddPersonalTrainingState extends State<AddPersonalTraining> {
               children: [
                 Text(
                   'Adding PT Data for "${widget.name}"',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
                 ),
                 SizedBox(height: 10),
                 Padding(

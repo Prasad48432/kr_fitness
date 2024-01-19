@@ -40,6 +40,7 @@ class _AddRolePageState extends State<AddRolePage> {
             .set({
           'name': _nameController.text.trim(),
           'role': _selectedRole,
+          'notifications': true,
         });
         Toast.show('Role added successfully',
             backgroundColor: Colors.green,
