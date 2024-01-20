@@ -66,6 +66,7 @@ dependencies:
   path_provider: ^2.1.1
   uuid: 4.2.2
   flutter_svg: ^2.0.9
+  
 
 flutter_native_splash:
   # This package generates native code to customize Flutter's default white native splash screen

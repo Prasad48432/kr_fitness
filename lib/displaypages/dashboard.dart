@@ -237,9 +237,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       screenTransitionAnimation: const ScreenTransitionAnimation(
         animateTabTransition: true,
         curve: Curves.ease,
-        duration: Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 500),
       ),
-      navBarStyle: NavBarStyle.style15,
+      navBarStyle: NavBarStyle.style1,
     );
   }
 
@@ -280,9 +280,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.add),
-        title: "Add Member",
+        title: "Add",
         textStyle: const TextStyle(fontSize: 10),
-        activeColorSecondary: Colors.white,
         activeColorPrimary: AppColors.primaryBackground,
         inactiveColorPrimary: CupertinoColors.systemGrey,
       ),

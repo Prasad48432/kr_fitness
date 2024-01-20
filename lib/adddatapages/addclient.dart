@@ -67,8 +67,9 @@ class _AddClientState extends State<AddClient> {
 
   Future<List<Map<String, dynamic>>> fetchTrainersList() async {
     try {
-      QuerySnapshot packagesSnapshot =
-          await FirebaseFirestore.instance.collection('UserRoles').get();
+      QuerySnapshot packagesSnapshot = await FirebaseFirestore.instance
+          .collection('UserRoles')
+          .where('role', whereIn: ['Owner', 'Trainer']).get();
 
       List<Map<String, dynamic>> packages = packagesSnapshot.docs.map((doc) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -365,7 +366,7 @@ class _AddClientState extends State<AddClient> {
                       ),
                       decoration: InputDecoration(
                         prefixIcon: Icon(
-                          LineIcons.amazonPay,
+                          Icons.engineering_outlined,
                           color: Colors.black87,
                         ),
                         border: OutlineInputBorder(),

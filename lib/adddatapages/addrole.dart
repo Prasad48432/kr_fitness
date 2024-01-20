@@ -150,10 +150,13 @@ class _AddRolePageState extends State<AddRolePage> {
               ),
               DropdownButtonFormField<String>(
                 value: _selectedRole,
-                items: ['Developer', 'Manager']
+                items: ['Manager', 'Trainer']
                     .map((role) => DropdownMenuItem(
                           value: role,
-                          child: Text(role),
+                          child: Text(
+                            role,
+                            style: TextStyle(fontWeight: FontWeight.normal),
+                          ),
                         ))
                     .toList(),
                 onChanged: (value) {
@@ -163,7 +166,7 @@ class _AddRolePageState extends State<AddRolePage> {
                 },
                 decoration: InputDecoration(
                   prefixIcon: Icon(
-                    Icons.manage_accounts,
+                    Icons.manage_accounts_outlined,
                     color: Colors.black87,
                   ),
                   border: OutlineInputBorder(),
@@ -187,15 +190,17 @@ class _AddRolePageState extends State<AddRolePage> {
                   backgroundColor: AppColors.primaryCard,
                 ),
                 onPressed: () async {
-                  if (GlobalVariablesUse.role == 'Owner') {
-                    await _addUser();
-                    await FirebaseAuth.instance.signOut();
-                    Navigator.pop(context);
-                  } else {
-                    Toast.show('you cant add a role',
-                        backgroundColor: Colors.red,
-                        duration: Toast.lengthShort,
-                        gravity: Toast.bottom);
+                  if (_formKey.currentState!.validate()) {
+                    if (GlobalVariablesUse.role == 'Owner') {
+                      await _addUser();
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pop(context);
+                    } else {
+                      Toast.show('you cant add a role',
+                          backgroundColor: Colors.red,
+                          duration: Toast.lengthShort,
+                          gravity: Toast.bottom);
+                    }
                   }
                 },
                 child: Text(
