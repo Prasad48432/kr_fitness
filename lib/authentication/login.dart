@@ -100,8 +100,11 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/images/krfitnesslogonobg.png',
-                    width: 200,
+                    'assets/images/dashlogo.png',
+                    width: 170,
+                  ),
+                  SizedBox(
+                    height: 15,
                   ),
                   const Text(
                     'KR Fitness',

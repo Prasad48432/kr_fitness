@@ -621,10 +621,25 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                               // Replace 'widget.id' with the actual document ID
                               String clientId = widget.id;
 
-                              // Update the 'personaltraining' field to true
-                              await clientsCollection
-                                  .doc(clientId)
-                                  .update({'personaltraining': true});
+                              // Get the client document
+                              DocumentSnapshot clientDoc =
+                                  await clientsCollection.doc(clientId).get();
+
+                              // Check if 'trainerid' field exists
+                              if (!(clientDoc.data() as Map<String, dynamic>)
+                                  .containsKey('trainerid')) {
+                                // If not, update the document with 'trainerid' field set to current user UID
+                                await clientsCollection.doc(clientId).update({
+                                  'personaltraining': true,
+                                  'trainerid':
+                                      FirebaseAuth.instance.currentUser!.uid,
+                                });
+                              } else {
+                                // If 'trainerid' field already exists, update only 'personaltraining' field
+                                await clientsCollection
+                                    .doc(clientId)
+                                    .update({'personaltraining': true});
+                              }
                             } catch (e) {
                               // Handle any errors that might occur during the update
                               print(

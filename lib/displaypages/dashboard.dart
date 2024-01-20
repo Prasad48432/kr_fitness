@@ -33,7 +33,6 @@ import 'package:shimmer/shimmer.dart';
 import 'package:kr_fitness/widgets/task_group.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:toast/toast.dart';
-import 'package:animated_icon_button/animated_icon_button.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:uuid/uuid.dart';
@@ -53,16 +52,13 @@ class Dashboard extends StatefulWidget {
 class GlobalVariablesUse {
   static String role = '';
 
-  // Function to initialize global variables, including fetching user role
   static Future<void> initialize() async {
-    // Fetch user role from Firebase
     String userUid = FirebaseAuth.instance.currentUser!.uid;
     var snapshot = await FirebaseFirestore.instance
         .collection('UserRoles')
         .doc(userUid)
         .get();
 
-    // Update the global role variable
     role = snapshot.data()?['role'] ?? '';
   }
 }
@@ -108,6 +104,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     _fetchData();
     globalFetch();
     initNotifications();
+    initializeStatus();
+    setState(() {});
   }
 
   Future<void> globalFetch() async {
@@ -119,7 +117,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       await _firebaseMessaging.requestPermission();
       final fcmToken = await _firebaseMessaging.getToken();
 
-      // Fetch user role and FCMtoken from Firebase
       String userUid = FirebaseAuth.instance.currentUser!.uid;
       var userRolesSnapshot = await FirebaseFirestore.instance
           .collection('UserRoles')
@@ -129,9 +126,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       Map<String, dynamic>? userData = userRolesSnapshot.data();
 
       if (userData != null) {
-        // Check if FCMtoken field exists
         if (!userData.containsKey('FCMtoken')) {
-          // Add FCMtoken to the 'UserRoles' document
           await FirebaseFirestore.instance
               .collection('UserRoles')
               .doc(userUid)
@@ -141,6 +136,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } catch (e) {
       print("Error initializing notifications: $e");
     }
+  }
+
+  Future<void> initializeStatus() async {
+    notificationsEnabled = await getNotificationStatus();
   }
 
   String getCurrentDate() {
@@ -167,15 +166,12 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<void> fetchNotificationsState() async {
     try {
-      // Fetch the 'notifications' field from the UserRoles collection
-
       String userUid = FirebaseAuth.instance.currentUser!.uid;
       var snapshot = await FirebaseFirestore.instance
           .collection('UserRoles')
           .doc(userUid)
           .get();
 
-      // Update the local state with the fetched value
       setState(() {
         notificationsEnabled = snapshot.data()?['notifications'] ?? true;
       });
@@ -186,7 +182,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   Future<void> updateNotificationsState(bool isEnabled) async {
     try {
-      // Update the 'notifications' field in the UserRoles collection
       String userUid = FirebaseAuth.instance.currentUser!.uid;
       await FirebaseFirestore.instance
           .collection('UserRoles')
@@ -194,6 +189,23 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           .update({'notifications': isEnabled});
     } catch (e) {
       print('Error updating notifications state: $e');
+    }
+  }
+
+  Future<bool> getNotificationStatus() async {
+    try {
+      // Fetch the 'notifications' field from the UserRoles collection
+      String userUid = FirebaseAuth.instance.currentUser!.uid;
+      var snapshot = await FirebaseFirestore.instance
+          .collection('UserRoles')
+          .doc(userUid)
+          .get();
+
+      // Return the value of the 'notifications' field, defaulting to true if it doesn't exist
+      return snapshot.data()?['notifications'] ?? true;
+    } catch (e) {
+      print('Error fetching notifications state: $e');
+      return true; // Default to true in case of an error
     }
   }
 
@@ -553,10 +565,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   onPressed: () async {
                     if (GlobalVariablesUse.role == 'Owner') {
                       yearDialog();
-                      // final bytes = await controller.capture();
-                      // setState(() {
-                      //   this.bytes = bytes;
-                      // });
                     } else {
                       Toast.show('not allowed',
                           duration: Toast.lengthShort,
@@ -681,7 +689,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              const SizedBox(height: 8), // Add some spacing between buttons
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
@@ -701,7 +709,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                             backgroundColor: Colors.green,
                             duration: Toast.lengthShort,
                             gravity: Toast.bottom);
-                        Navigator.pop(context); // Close the dialog
+                        Navigator.pop(context);
                       },
                       child: Text('${currentYear - 2}',
                           style: TextStyle(
@@ -976,7 +984,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 font: ttfsemibold),
                           ),
                         ]),
-                    // Add your image here (Replace 'path_to_your_image' with the actual path)
                     pw.Image(pw.MemoryImage(image),
                         width: 150, height: 150, fit: pw.BoxFit.cover)
                   ],
@@ -985,7 +992,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             ),
             pw.SizedBox(height: 20),
 
-            // Content
             pw.Center(
               child: pw.Text(
                 'Gym Report - $year',
@@ -997,7 +1003,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             ),
             pw.SizedBox(height: 20),
 
-            // Add your content here (fetch from Firebase)
             pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -1134,7 +1139,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   )),
                 ]),
             pw.SizedBox(height: 30),
-            // Footer
+
             pw.Container(
               width: double.infinity,
               decoration: pw.BoxDecoration(
@@ -1435,13 +1440,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             return daysLeftA.compareTo(daysLeftB);
           });
 
-          // Additional variable to keep track of displayed items
           int displayedItems = 0;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Use ListView.separated for better control of separators
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1449,7 +1452,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 separatorBuilder: (context, index) => const SizedBox(height: 0),
                 itemBuilder: (context, index) {
                   if (displayedItems >= 3) {
-                    // Stop displaying items if already displayed 3
                     return Container();
                   }
 
@@ -1465,7 +1467,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     return Container();
                   }
 
-                  // Increment the displayedItems count for each eligible item
                   displayedItems++;
 
                   return GestureDetector(
@@ -1609,7 +1610,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         } else {
           List<DocumentSnapshot> sortedData = List.from(snapshot.data!);
 
-          // Sort the sortedData based on daysLeft.abs() in ascending order
           sortedData.sort((item1, item2) {
             int daysLeft1 =
                 (item1)['enddate'].toDate().difference(DateTime.now()).inDays +
@@ -1622,13 +1622,11 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             return daysLeft2.abs().compareTo(daysLeft1.abs());
           });
 
-          // Additional variables to keep track of displayed items
           int displayedItems = 0;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Use ListView.separated for better control of separators
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1636,7 +1634,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 separatorBuilder: (context, index) => const SizedBox(height: 0),
                 itemBuilder: (context, index) {
                   if (displayedItems >= 3) {
-                    // Stop displaying items if already displayed 3
                     return Container();
                   }
 
@@ -1649,7 +1646,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   bool SubStatus = subscription['active']!;
                   String Docid = subscription['subscriptionid'];
 
-                  // Check conditions for skipping items
                   if (subscription['enddate']
                           .toDate()
                           .isAfter(DateTime.now()) ||
@@ -1659,7 +1655,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     return Container();
                   }
 
-                  // Increment the displayedItems count for each eligible item
                   displayedItems++;
 
                   return GestureDetector(
@@ -1875,23 +1870,18 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       child: Container(
         color: Colors.white,
         child: FutureBuilder(
-            // Fetch user role from Firestore
             future: FirebaseFirestore.instance
                 .collection('UserRoles')
                 .doc(uid)
                 .get(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                // If the data is still loading, you can show a loading indicator
                 return Container();
               } else if (snapshot.hasError) {
-                // Handle error case
                 return Center(child: Text('Error fetching user role'));
               } else if (!snapshot.hasData || snapshot.data == null) {
-                // Handle case where data is empty
                 return Center(child: Text('User role not found'));
               } else {
-                // Data retrieved successfully
                 var userRole = snapshot.data!['role'];
                 var userName = snapshot.data!['name'];
                 return ListView(

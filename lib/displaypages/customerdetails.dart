@@ -729,6 +729,7 @@ class _CustomerDetailsState extends State<CustomerDetails>
     Timestamp dob = data['dob'];
     int contact = data['contact'];
     String gender = data['gender'];
+    String trainerid = data['trainerid'] ?? '';
     bool personalTraining = data['personaltraining'];
     DateTime? subscriptionEndDate;
     int pendingamount = 0;
@@ -910,6 +911,7 @@ class _CustomerDetailsState extends State<CustomerDetails>
                                   name: widget.name,
                                   gender: gender,
                                   age: CurrentAge,
+                                  trainerid: trainerid,
                                 )));
                   },
                   child: Row(

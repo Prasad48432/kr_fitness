@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -71,22 +72,26 @@ class PersonalTrainingClientsList extends StatelessWidget {
           );
         }
 
+        var filteredDocs = snapshot.data!.docs.where((doc) =>
+            doc['trainerid'] == FirebaseAuth.instance.currentUser?.uid);
+
         return ListView.builder(
-          itemCount: snapshot.data!.docs.length,
+          itemCount: filteredDocs.length,
           itemBuilder: (context, index) {
             var clientData =
-                snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                filteredDocs.elementAt(index).data() as Map<String, dynamic>;
             var contact = clientData['contact'];
             var clientName = clientData['name'] ?? 'Unknown';
             var clientImage =
                 clientData['image'] ?? ''; // Provide the correct field name
+            var clientIdPT = filteredDocs.elementAt(index).id;
 
             return Card(
               elevation: 0,
               margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
               child: GestureDetector(
                 onTap: () {
-                  var clientId = snapshot.data!.docs[index].id;
+                  var clientId = filteredDocs.elementAt(index).id;
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => CustomerDetails(
@@ -134,7 +139,7 @@ class PersonalTrainingClientsList extends StatelessWidget {
                     subtitle: FutureBuilder<DocumentSnapshot>(
                       future: FirebaseFirestore.instance
                           .collection('Clients')
-                          .doc(snapshot.data!.docs[index].id)
+                          .doc(clientIdPT)
                           .collection('PersonalTraining')
                           .orderBy('timestamp', descending: true)
                           .limit(1)

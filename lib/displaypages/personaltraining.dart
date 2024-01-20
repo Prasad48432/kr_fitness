@@ -1,14 +1,16 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:kr_fitness/adddatapages/addpersonaltraining.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:toast/toast.dart';
 
 class PersonalTraining extends StatefulWidget {
-  final String id, name, gender;
+  final String id, name, gender, trainerid;
   final int age;
 
   const PersonalTraining(
@@ -16,7 +18,8 @@ class PersonalTraining extends StatefulWidget {
       required this.id,
       required this.name,
       required this.gender,
-      required this.age});
+      required this.age,
+      required this.trainerid});
 
   @override
   State<PersonalTraining> createState() => _PersonalTrainingState();
@@ -200,17 +203,24 @@ class _PersonalTrainingState extends State<PersonalTraining> {
             icon: const Icon(LineIcons.plus),
             color: Colors.black,
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddPersonalTraining(
-                    id: widget.id,
-                    name: widget.name,
-                    gender: widget.gender,
-                    age: widget.age,
+              if (widget.trainerid == FirebaseAuth.instance.currentUser!.uid) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddPersonalTraining(
+                      id: widget.id,
+                      name: widget.name,
+                      gender: widget.gender,
+                      age: widget.age,
+                    ),
                   ),
-                ),
-              );
+                );
+              } else {
+                Toast.show('Trainer mismatch',
+                    backgroundColor: Colors.red,
+                    duration: Toast.lengthShort,
+                    gravity: Toast.bottom);
+              }
             },
           ),
         ]);

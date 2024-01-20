@@ -205,7 +205,7 @@ class _EndingTodayCustomersState extends State<EndingTodayCustomers> {
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: ListView.builder(
-        itemCount: 10, // Adjust the number of shimmer items as needed
+        itemCount: 10,
         itemBuilder: (context, index) {
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),

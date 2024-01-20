@@ -31,12 +31,8 @@ class _AddClientState extends State<AddClient> {
   @override
   void initState() {
     super.initState();
-    // _initializeFirebase();
+    _initializeDropdownTrainers();
   }
-
-  // _initializeFirebase() async {
-  //   fcmToken = await firebaseApi.initNotifications();
-  // }
 
   final _formKey = GlobalKey<FormBuilderState>();
 
@@ -47,6 +43,7 @@ class _AddClientState extends State<AddClient> {
   XFile? selectedImage;
   bool isLoading = false;
   String selectedPackage = '';
+  List<Map<String, dynamic>> TrainersList = [];
 
   Widget _buildImagePreview() {
     if (selectedImage != null) {
@@ -59,9 +56,30 @@ class _AddClientState extends State<AddClient> {
         child: CircleAvatar(
             radius: 50,
             backgroundColor: Colors.grey,
-            backgroundImage: Image.asset('assets/images/dummyuser.png')
-                .image), // Show a progress indicator
+            backgroundImage: Image.asset('assets/images/dummyuser.png').image),
       );
+    }
+  }
+
+  _initializeDropdownTrainers() async {
+    TrainersList = await fetchTrainersList();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchTrainersList() async {
+    try {
+      QuerySnapshot packagesSnapshot =
+          await FirebaseFirestore.instance.collection('UserRoles').get();
+
+      List<Map<String, dynamic>> packages = packagesSnapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // Add the document ID to the map
+        return data;
+      }).toList();
+
+      return packages;
+    } catch (e) {
+      print("Error fetching packages: $e");
+      return [];
     }
   }
 
@@ -76,17 +94,18 @@ class _AddClientState extends State<AddClient> {
   }
 
   bool imagePicked = false;
+  bool showDropdown = false;
 
   final TextStyle customOptionStyle = TextStyle(
-    color: Colors.black, // Change this to your desired color
-    fontSize: 16, // Customize the font size
-    fontWeight: FontWeight.normal, // Customize the font weight
+    color: Colors.black,
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
   );
 
   final TextStyle customOptionStyle2 = TextStyle(
-    color: Colors.black, // Change this to your desired color
-    fontSize: 16, // Customize the font size
-    fontWeight: FontWeight.normal, // Customize the font weight
+    color: Colors.black,
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
   );
 
   @override
@@ -236,12 +255,11 @@ class _AddClientState extends State<AddClient> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          'Select Gender', // Your desired text
+                          'Select Gender',
                           style: TextStyle(
-                            color: Colors.black, // Customize the text color
-                            fontSize: 16, // Customize the text size
-                            fontWeight:
-                                FontWeight.normal, // Customize the text weight
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
                           ),
                         ),
                       ),
@@ -282,12 +300,11 @@ class _AddClientState extends State<AddClient> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
-                          'Personal Training', // Your desired text
+                          'Personal Training',
                           style: TextStyle(
-                            color: Colors.black, // Customize the text color
-                            fontSize: 16, // Customize the text size
-                            fontWeight:
-                                FontWeight.normal, // Customize the text weight
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
                           ),
                         ),
                       ),
@@ -300,6 +317,11 @@ class _AddClientState extends State<AddClient> {
                         validator: FormBuilderValidators.required(
                           errorText: 'please select a option',
                         ),
+                        onChanged: (value) {
+                          setState(() {
+                            showDropdown = value == true;
+                          });
+                        },
                         options: [
                           FormBuilderFieldOption(
                             value: true,
@@ -318,6 +340,42 @@ class _AddClientState extends State<AddClient> {
                         ],
                       ),
                     ],
+                  ),
+                ),
+                Visibility(
+                  visible: showDropdown,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: FormBuilderDropdown(
+                      dropdownColor: Colors.white,
+                      name: 'trainer',
+                      validator: FormBuilderValidators.required(
+                        errorText: 'Please select a trainer',
+                      ),
+                      items: TrainersList.map((package) {
+                        return DropdownMenuItem(
+                          value: package['id'],
+                          child: Text(package['name']),
+                        );
+                      }).toList(),
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontFamily: 'Montserrat',
+                        fontSize: 16.0,
+                      ),
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(
+                          LineIcons.amazonPay,
+                          color: Colors.black87,
+                        ),
+                        border: OutlineInputBorder(),
+                        label: Text("Trainer for PT"),
+                        labelStyle: TextStyle(color: Colors.black87),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 Padding(
@@ -425,7 +483,6 @@ class _AddClientState extends State<AddClient> {
                           _formKey.currentState!.value['contact'].toString(),
                         );
 
-                        // Check for duplicate contact numbers
                         bool isContactDuplicate =
                             await checkDuplicateContact(contact);
                         if (isContactDuplicate) {
@@ -439,8 +496,7 @@ class _AddClientState extends State<AddClient> {
                           });
                           return;
                         } else {
-                          if (isLoading)
-                            return; // Prevent multiple clicks while loading
+                          if (isLoading) return;
                           setState(() {
                             isLoading = true;
                           });
@@ -462,6 +518,9 @@ class _AddClientState extends State<AddClient> {
                           bool personaltraining =
                               _formKey.currentState!.value['personaltraining'];
 
+                          String? trainer =
+                              _formKey.currentState!.value['trainer'];
+
                           Map<String, dynamic> dataToSend = {
                             'name': name,
                             'gender': selectedGender,
@@ -471,6 +530,7 @@ class _AddClientState extends State<AddClient> {
                             'contact': contact,
                             'personaltraining': personaltraining,
                             'timestamp': FieldValue.serverTimestamp(),
+                            'trainerid': trainer,
                           };
                           _reference.add(dataToSend).then((value) {
                             Toast.show(
@@ -486,7 +546,7 @@ class _AddClientState extends State<AddClient> {
                                 MaterialPageRoute(
                                   builder: (context) => Customers(
                                     fromHome: false,
-                                  ), // Replace YourHomePage with the actual home page widget
+                                  ),
                                 ),
                               );
                             }
@@ -496,14 +556,12 @@ class _AddClientState extends State<AddClient> {
                     },
                     child: isLoading
                         ? Container(
-                            width: 24, // Set the desired width
-                            height: 24, // Set the desired height
+                            width: 24,
+                            height: 24,
                             child: CircularProgressIndicator(
-                              strokeWidth:
-                                  2, // Adjust the thickness of the indicator
+                              strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color.fromARGB(255, 48, 136,
-                                      207)), // Customize the color
+                                  Color.fromARGB(255, 48, 136, 207)),
                             ),
                           )
                         : const Text(
