@@ -66,6 +66,8 @@ dependencies:
   path_provider: ^2.1.1
   uuid: 4.2.2
   flutter_svg: ^2.0.9
+  dash_chat_2: ^0.0.19
+  chat_gpt_sdk: ^2.2.8
   
 
 flutter_native_splash:

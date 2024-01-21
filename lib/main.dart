@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:kr_fitness/api/firebase_api.dart';
 import 'package:kr_fitness/authentication/login.dart';
 import 'package:kr_fitness/displaypages/dashboard.dart';
-import 'package:kr_fitness/displaypages/overduecustomers.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -41,8 +40,7 @@ class _MyAppState extends State<MyApp> {
               return const LoginPage();
             } else {
               return Dashboard(
-                                onLogout: () {
-                  // Set state to force a rebuild of the StreamBuilder
+                onLogout: () {
                   setState(() {});
                 },
               );
@@ -51,13 +49,9 @@ class _MyAppState extends State<MyApp> {
           return const CircularProgressIndicator();
         },
       ),
-      routes: {OverdueCustomers.route: (context) => const OverdueCustomers()},
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
           fontFamily: 'Montserrat', scaffoldBackgroundColor: Colors.white),
     );
   }
-
-
-  
 }

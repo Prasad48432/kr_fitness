@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _login() async {
     try {
       setState(() {
-        _isLoading = true; // Show progress indicator
+        _isLoading = true;
       });
       FocusScope.of(context).unfocus();
 
@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
           duration: Toast.lengthShort, gravity: Toast.center);
 
       setState(() {
-        _isLoading = false; // Hide progress indicator on error
+        _isLoading = false;
       });
     }
   }
@@ -192,22 +192,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  // const SizedBox(
-                  //   height: 8,
-                  // ),
-                  // TextButton(
-                  //     onPressed: () {
-                  //       Navigator.push(
-                  //         context,
-                  //         MaterialPageRoute(
-                  //           builder: (context) => SignUpPage(),
-                  //         ),
-                  //       );
-                  //     },
-                  //     child: Text(
-                  //       'not a user Signup?',
-                  //       style: TextStyle(color: Colors.blue),
-                  //     ))
                 ],
               ),
             ),

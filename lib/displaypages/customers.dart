@@ -22,7 +22,6 @@ class _CustomersState extends State<Customers> {
   List<Clients> clientsData = [];
   String name = "";
   final TextEditingController _textEditingController = TextEditingController();
-  
 
   @override
   void initState() {
@@ -84,49 +83,44 @@ class _CustomersState extends State<Customers> {
             color: const Color.fromARGB(255, 255, 255, 255),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textEditingController,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 15),
-                        prefixIcon: const Icon(LineIcons.search),
-                        hintText: 'Search...',
-                        focusColor: Colors.black,
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          borderSide: BorderSide(
-                              color: AppColors
-                                  .primaryBackground), // Set the color you want
+              child: Container(
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black),
+                    borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _textEditingController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10.0, horizontal: 15),
+                          prefixIcon: const Icon(LineIcons.search),
+                          hintText: 'Search...',
+                          border: InputBorder.none,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                          borderSide: const BorderSide(),
-                        ),
+                        onChanged: (val) {
+                          setState(() {
+                            name = val;
+                          });
+                        },
                       ),
-                      onChanged: (val) {
+                    ),
+                    // Clear button
+                    IconButton(
+                      icon: const Icon(
+                        Icons.clear,
+                        color: Colors.black54,
+                      ),
+                      onPressed: () {
                         setState(() {
-                          name = val;
+                          _textEditingController.clear();
+                          name = '';
                         });
                       },
                     ),
-                  ),
-                  // Clear button
-                  IconButton(
-                    icon: const Icon(
-                      Icons.clear,
-                      color: Colors.black54,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _textEditingController.clear();
-                        name = '';
-                      });
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

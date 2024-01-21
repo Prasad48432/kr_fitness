@@ -15,6 +15,7 @@ import 'package:kr_fitness/displaypages/clientpayments.dart';
 import 'package:kr_fitness/displaypages/customerdetails.dart';
 import 'package:kr_fitness/displaypages/customers.dart';
 import 'package:kr_fitness/displaypages/customersenquiry.dart';
+import 'package:kr_fitness/displaypages/dietprovider.dart';
 import 'package:kr_fitness/displaypages/endingtodaycustomers.dart';
 import 'package:kr_fitness/displaypages/globalvariables.dart';
 import 'package:kr_fitness/displaypages/inactivecustomers.dart';

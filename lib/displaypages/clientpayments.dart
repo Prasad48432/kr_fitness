@@ -365,6 +365,14 @@ class _ClientPaymentsState extends State<ClientPayments> {
     );
   }
 
+  Widget _buildLoadingIndicator() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      alignment: Alignment.center,
+      child: CircularProgressIndicator(),
+    );
+  }
+
   AppBar appBar(BuildContext context) {
     return AppBar(
       elevation: 0.0,

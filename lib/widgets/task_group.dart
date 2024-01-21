@@ -63,7 +63,7 @@ class TaskGroupContainer extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 5),
+            SizedBox(height: 0),
             Text(
               "$taskCount",
               style: TextStyle(

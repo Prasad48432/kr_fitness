@@ -321,6 +321,10 @@ class _AddClientState extends State<AddClient> {
                         onChanged: (value) {
                           setState(() {
                             showDropdown = value == true;
+                            if (value == false) {
+                              _formKey.currentState!
+                                  .setInternalFieldValue('trainer', null);
+                            }
                           });
                         },
                         options: [
@@ -469,6 +473,7 @@ class _AddClientState extends State<AddClient> {
                         minimumSize: const Size.fromHeight(50),
                         backgroundColor: AppColors.primaryCard),
                     onPressed: () async {
+                      FocusScope.of(context).unfocus();
                       if (imageUrl.isEmpty) {
                         Toast.show("Please uplaod image",
                             duration: Toast.lengthShort,
@@ -487,11 +492,10 @@ class _AddClientState extends State<AddClient> {
                         bool isContactDuplicate =
                             await checkDuplicateContact(contact);
                         if (isContactDuplicate) {
-                          Toast.show(
-                            "Contact number already exists",
-                            duration: Toast.lengthShort,
-                            gravity: Toast.center,
-                          );
+                          Toast.show("Contact number already exists",
+                              duration: Toast.lengthShort,
+                              gravity: Toast.bottom,
+                              backgroundColor: Colors.red);
                           setState(() {
                             isLoading = false;
                           });
@@ -501,7 +505,6 @@ class _AddClientState extends State<AddClient> {
                           setState(() {
                             isLoading = true;
                           });
-                          FocusScope.of(context).unfocus();
                           await Future.delayed(Duration(seconds: 1));
 
                           String name =
@@ -561,8 +564,8 @@ class _AddClientState extends State<AddClient> {
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color.fromARGB(255, 48, 136, 207)),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(
