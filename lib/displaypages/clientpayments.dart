@@ -19,8 +19,8 @@ class _ClientPaymentsState extends State<ClientPayments> {
   final CollectionReference paymentsCollection =
       FirebaseFirestore.instance.collection('Payments');
 
-  bool _allSelected = false;
-  bool _todaySelected = true;
+  bool _allSelected = true;
+  bool _todaySelected = false;
   bool _weekSelected = false;
   bool _monthSelected = false;
   bool _customSelected = false;
