@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:kr_fitness/displaypages/clientspaymentsall.dart';
 import 'package:kr_fitness/displaypages/customerdetails.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:shimmer/shimmer.dart';
@@ -18,16 +19,15 @@ class _ClientPaymentsState extends State<ClientPayments> {
   final CollectionReference paymentsCollection =
       FirebaseFirestore.instance.collection('Payments');
 
-  bool _todaySelected = false;
+  bool _allSelected = false;
+  bool _todaySelected = true;
   bool _weekSelected = false;
   bool _monthSelected = false;
   bool _customSelected = false;
-  bool _yearSelected = false;
 
   DateTime _getStartDate() {
     if (_customSelected) {
-      return _startDate ??
-          DateTime(1900, 1, 1); // Use a default value if _startDate is null
+      return _startDate ?? DateTime(1900, 1, 1);
     }
     DateTime currentDate = DateTime.now();
     if (_todaySelected) {
@@ -36,10 +36,7 @@ class _ClientPaymentsState extends State<ClientPayments> {
       return currentDate.subtract(const Duration(days: 7));
     } else if (_monthSelected) {
       return currentDate.subtract(const Duration(days: 30));
-    } else if (_yearSelected) {
-      return currentDate.subtract(const Duration(days: 365));
     } else {
-      // If none is selected, return the earliest date possible or modify as needed
       return DateTime(1900, 1, 1);
     }
   }
@@ -80,15 +77,29 @@ class _ClientPaymentsState extends State<ClientPayments> {
                 scrollDirection: Axis.horizontal,
                 children: [
                   ChoiceChip(
+                    label: const Text('All'),
+                    selected: _allSelected,
+                    selectedColor: Color.fromARGB(255, 135, 181, 193),
+                    onSelected: (value) {
+                      setState(() {
+                        _allSelected = value;
+                        _todaySelected = false;
+                        _weekSelected = false;
+                        _monthSelected = false;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
                     label: const Text('Today'),
                     selected: _todaySelected,
                     selectedColor: Color.fromARGB(255, 135, 181, 193),
                     onSelected: (value) {
                       setState(() {
                         _todaySelected = value;
+                        _allSelected = false;
                         _weekSelected = false;
                         _monthSelected = false;
-                        _yearSelected = false;
                       });
                     },
                   ),
@@ -101,8 +112,8 @@ class _ClientPaymentsState extends State<ClientPayments> {
                       setState(() {
                         _todaySelected = false;
                         _weekSelected = value;
+                        _allSelected = false;
                         _monthSelected = false;
-                        _yearSelected = false;
                       });
                     },
                   ),
@@ -115,22 +126,8 @@ class _ClientPaymentsState extends State<ClientPayments> {
                       setState(() {
                         _todaySelected = false;
                         _weekSelected = false;
+                        _allSelected = false;
                         _monthSelected = value;
-                        _yearSelected = false;
-                      });
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: const Text('Year'),
-                    selected: _yearSelected,
-                    selectedColor: Color.fromARGB(255, 135, 181, 193),
-                    onSelected: (value) {
-                      setState(() {
-                        _todaySelected = false;
-                        _weekSelected = false;
-                        _monthSelected = false;
-                        _yearSelected = value;
                       });
                     },
                   ),
@@ -150,7 +147,6 @@ class _ClientPaymentsState extends State<ClientPayments> {
                         _todaySelected = false;
                         _weekSelected = false;
                         _monthSelected = false;
-                        _yearSelected = false;
                       });
                     },
                   ),
@@ -170,140 +166,146 @@ class _ClientPaymentsState extends State<ClientPayments> {
               ),
             ),
           ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: paymentsCollection
-                  .where('timestamp', isGreaterThanOrEqualTo: _getStartDate())
-                  .where('timestamp',
-                      isLessThanOrEqualTo: (_endDate ?? DateTime.now())
-                          .add(const Duration(days: 1)))
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildShimmerEffect();
-                }
+          _allSelected
+              ? Expanded(child: ClientPaymentsAll())
+              : Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: paymentsCollection
+                        .where('timestamp',
+                            isGreaterThanOrEqualTo: _getStartDate())
+                        .where('timestamp',
+                            isLessThanOrEqualTo: (_endDate ?? DateTime.now())
+                                .add(const Duration(days: 1)))
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return _buildShimmerEffect();
+                      }
 
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
+                      if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      }
 
-                // Extract the data from the snapshot
-                final payments = snapshot.data!.docs;
+                      // Extract the data from the snapshot
+                      final payments = snapshot.data!.docs;
 
-                if (payments.isEmpty) {
-                  return const Center(
-                      child: Text(
-                    'No Payments found.',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500),
-                  ));
-                }
+                      if (payments.isEmpty) {
+                        return const Center(
+                            child: Text(
+                          'No Payments found.',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w500),
+                        ));
+                      }
 
-                return SingleChildScrollView(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: payments.length,
-                    itemBuilder: (context, index) {
-                      var paymentData =
-                          payments[index].data() as Map<String, dynamic>;
+                      return SingleChildScrollView(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: payments.length,
+                          itemBuilder: (context, index) {
+                            var paymentData =
+                                payments[index].data() as Map<String, dynamic>;
 
-                      DateTime date = paymentData['timestamp'].toDate();
-                      String formattedDate =
-                          DateFormat('dd MMM yyyy \'at\' HH:mm a').format(date);
+                            DateTime date = paymentData['timestamp'].toDate();
+                            String formattedDate =
+                                DateFormat('dd MMM yyyy \'at\' HH:mm a')
+                                    .format(date);
 
-                      return Card(
-                        elevation: 0,
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 0, horizontal: 8),
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CustomerDetails(
-                                  id: paymentData['clientid'],
-                                  image: paymentData['image'],
-                                  name: paymentData['name'],
-                                  contact: paymentData['contact'],
+                            return Card(
+                              elevation: 0,
+                              margin: const EdgeInsets.symmetric(
+                                  vertical: 0, horizontal: 8),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => CustomerDetails(
+                                        id: paymentData['clientid'],
+                                        image: paymentData['image'],
+                                        name: paymentData['name'],
+                                        contact: paymentData['contact'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                        bottom: BorderSide(
+                                            color: Colors.black38, width: 1.0)),
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 6.0, vertical: 2.0),
+                                    tileColor: Colors.white,
+                                    leading: CachedNetworkImage(
+                                      imageUrl: paymentData['image'],
+                                      imageBuilder: (context, imageProvider) =>
+                                          CircleAvatar(
+                                        radius: 25,
+                                        backgroundImage: imageProvider,
+                                      ),
+                                      placeholder: (context, url) =>
+                                          Shimmer.fromColors(
+                                        baseColor: Colors.grey[300]!,
+                                        highlightColor: Colors.grey[100]!,
+                                        child: CircleAvatar(
+                                          radius: 25,
+                                          backgroundColor: Colors.grey[300],
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          CircleAvatar(
+                                        radius: 25,
+                                        backgroundColor: Colors.red[300],
+                                      ),
+                                    ),
+                                    title: Text(
+                                      paymentData['name'],
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    subtitle: Text(
+                                      formattedDate,
+                                      style: const TextStyle(fontSize: 11.5),
+                                    ),
+                                    trailing: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          '${NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0).format(paymentData['amountpaid'])}',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 3,
+                                        ),
+                                        Text(
+                                          '${paymentData['paymentmode']}',
+                                          style: const TextStyle(fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             );
                           },
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                  bottom: BorderSide(
-                                      color: Colors.black38, width: 1.0)),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 6.0, vertical: 2.0),
-                              tileColor: Colors.white,
-                              leading: CachedNetworkImage(
-                                imageUrl: paymentData['image'],
-                                imageBuilder: (context, imageProvider) =>
-                                    CircleAvatar(
-                                  radius: 25,
-                                  backgroundImage: imageProvider,
-                                ),
-                                placeholder: (context, url) =>
-                                    Shimmer.fromColors(
-                                  baseColor: Colors.grey[300]!,
-                                  highlightColor: Colors.grey[100]!,
-                                  child: CircleAvatar(
-                                    radius: 25,
-                                    backgroundColor: Colors.grey[300],
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) =>
-                                    CircleAvatar(
-                                  radius: 25,
-                                  backgroundColor: Colors.red[300],
-                                ),
-                              ),
-                              title: Text(
-                                paymentData['name'],
-                                style: const TextStyle(
-                                    fontSize: 13, fontWeight: FontWeight.w500),
-                              ),
-                              subtitle: Text(
-                                formattedDate,
-                                style: const TextStyle(fontSize: 11.5),
-                              ),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '${NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0).format(paymentData['amountpaid'])}',
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 3,
-                                  ),
-                                  Text(
-                                    '${paymentData['paymentmode']}',
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         ),
                       );
                     },
                   ),
-                );
-              },
-            ),
-          ),
+                ),
         ],
       ),
     );
@@ -314,7 +316,7 @@ class _ClientPaymentsState extends State<ClientPayments> {
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: ListView.builder(
-        itemCount: 10, // Adjust the number of shimmer items as needed
+        itemCount: 10,
         itemBuilder: (context, index) {
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
@@ -362,14 +364,6 @@ class _ClientPaymentsState extends State<ClientPayments> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildLoadingIndicator() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      alignment: Alignment.center,
-      child: CircularProgressIndicator(),
     );
   }
 
