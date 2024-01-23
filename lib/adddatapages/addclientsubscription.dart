@@ -491,7 +491,7 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                     ),
                     decoration: InputDecoration(
                       prefixIcon: Icon(
-                        LineIcons.amazonPay,
+                        Icons.currency_exchange,
                         color: Colors.black87,
                       ),
                       border: OutlineInputBorder(),
@@ -513,7 +513,7 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                         errorText: 'Please enter the transactionid'),
                     decoration: const InputDecoration(
                       prefixIcon: Icon(
-                        LineIcons.fileInvoiceWithUsDollar,
+                        Icons.receipt_long_outlined,
                         color: Colors.black87,
                       ),
                       border: OutlineInputBorder(),
@@ -988,24 +988,3 @@ class ImageDialog extends StatelessWidget {
     );
   }
 }
-
-// usefull
-  // void _handlePackWelcomeMessage(int contact, String name, String package,
-  //     DateTime startDate, DateTime endDate) async {
-  //   final Uri smsLaunchUri = Uri(
-  //     scheme: 'sms',
-  //     path: '+91 ' +
-  //         contact.toString().substring(0, 4) +
-  //         '-' +
-  //         contact.toString().substring(4),
-  //     queryParameters: <String, String>{
-  //       'body':
-  //           'Hey! $name Thanks for your interest in KR Fitness your package of $package started on ${DateFormat('dd-MM-yyyy').format(startDate)} and will end on ${DateFormat('dd-MM-yyyy').format(endDate)}     - KR Fitness',
-  //     },
-  //   );
-  //   if (await canLaunchUrl(smsLaunchUri)) {
-  //     await launchUrl(smsLaunchUri);
-  //   } else {
-  //     print('error');
-  //   }
-  // }

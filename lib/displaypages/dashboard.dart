@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:intl/intl.dart';
 import 'package:kr_fitness/adddatapages/addclient.dart';
@@ -15,7 +16,6 @@ import 'package:kr_fitness/displaypages/clientpayments.dart';
 import 'package:kr_fitness/displaypages/customerdetails.dart';
 import 'package:kr_fitness/displaypages/customers.dart';
 import 'package:kr_fitness/displaypages/customersenquiry.dart';
-import 'package:kr_fitness/displaypages/dietprovider.dart';
 import 'package:kr_fitness/displaypages/endingtodaycustomers.dart';
 import 'package:kr_fitness/displaypages/globalvariables.dart';
 import 'package:kr_fitness/displaypages/inactivecustomers.dart';
@@ -333,19 +333,21 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       actions: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return ImageDialog();
-                  },
-                );
-              },
-              icon: const Icon(
-                Icons.local_offer_outlined,
-                color: Colors.black,
-              )),
+          child: GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return ImageDialog();
+                },
+              );
+            },
+            child: SvgPicture.asset(
+              'assets/images/offer.svg', // Replace with your SVG file path
+              height: 25,
+              fit: BoxFit.contain,
+            ),
+          ),
         )
       ],
       leading: Padding(
@@ -948,223 +950,225 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     final ttfBold = pw.Font.ttf(font2);
     final ttfsemibold = pw.Font.ttf(font3);
 
-    pdf.addPage(pw.Page(
+    pdf.addPage(pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
       build: (pw.Context context) {
-        return pw.Column(
-          children: [
-            // Header
-            pw.Container(
-              decoration: pw.BoxDecoration(
-                border: pw.Border(bottom: pw.BorderSide(width: 1.0)),
-              ),
-              child: pw.Padding(
-                padding: pw.EdgeInsets.all(8.0),
-                child: pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Column(
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            'KR Fitness Studio',
-                            style: pw.TextStyle(
-                                fontSize: 30,
-                                fontWeight: pw.FontWeight.bold,
-                                font: ttfBold),
-                          ),
-                          pw.SizedBox(height: 5),
-                          pw.Text(
-                            'Since 2022',
-                            style: pw.TextStyle(
-                                fontSize: 22,
-                                fontWeight: pw.FontWeight.bold,
-                                font: ttfsemibold),
-                          ),
-                        ]),
-                    pw.Image(pw.MemoryImage(image),
-                        width: 150, height: 150, fit: pw.BoxFit.cover)
-                  ],
+        return [
+          pw.Column(
+            children: [
+              // Header
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  border: pw.Border(bottom: pw.BorderSide(width: 1.0)),
+                ),
+                child: pw.Padding(
+                  padding: pw.EdgeInsets.all(8.0),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Column(
+                          mainAxisAlignment: pw.MainAxisAlignment.center,
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text(
+                              'KR Fitness Studio',
+                              style: pw.TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: ttfBold),
+                            ),
+                            pw.SizedBox(height: 5),
+                            pw.Text(
+                              'Since 2022',
+                              style: pw.TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: ttfsemibold),
+                            ),
+                          ]),
+                      pw.Image(pw.MemoryImage(image),
+                          width: 150, height: 150, fit: pw.BoxFit.cover)
+                    ],
+                  ),
                 ),
               ),
-            ),
-            pw.SizedBox(height: 20),
+              pw.SizedBox(height: 20),
 
-            pw.Center(
-              child: pw.Text(
-                'Gym Report - $year',
-                style: pw.TextStyle(
-                    fontSize: 25,
-                    fontWeight: pw.FontWeight.bold,
-                    font: ttfBold),
+              pw.Center(
+                child: pw.Text(
+                  'Gym Report - $year',
+                  style: pw.TextStyle(
+                      fontSize: 25,
+                      fontWeight: pw.FontWeight.bold,
+                      font: ttfBold),
+                ),
               ),
-            ),
-            pw.SizedBox(height: 20),
+              pw.SizedBox(height: 20),
 
-            pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Total Members:',
-                      style: pw.TextStyle(fontSize: 20, font: ttf)),
-                  pw.Expanded(
-                      child: pw.Align(
-                    alignment: pw.Alignment.centerRight,
-                    child: pw.Text('$totalMembers',
-                        style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
-                  ))
-                ]),
-            pw.SizedBox(height: 5),
-            pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Total Revenue:',
-                      style: pw.TextStyle(fontSize: 20, font: ttf)),
-                  pw.Expanded(
-                      child: pw.Align(
-                    alignment: pw.Alignment.centerRight,
-                    child: pw.Text('$formattedAmount',
-                        style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
-                  ))
-                ]),
-            pw.SizedBox(height: 10),
-            pw.Container(
-              decoration: pw.BoxDecoration(
-                border:
-                    pw.Border.all(color: PdfColor.fromHex('000000'), width: 1),
-                borderRadius: pw.BorderRadius.circular(6),
-              ),
-              child: pw.Padding(
-                padding: pw.EdgeInsets.all(8.0),
-                child: pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
-                    children: [
-                      pw.Text('your revenue has $percentText',
-                          style: pw.TextStyle(
-                              fontSize: 15,
-                              font: ttfsemibold,
-                              color: PdfColor.fromHex('000000'))),
-                      pw.SizedBox(width: 5),
-                      pw.Text('${roundedPercentage.abs()}%',
-                          style: pw.TextStyle(
-                              fontSize: 15,
-                              font: ttfsemibold,
-                              color: PdfColor.fromHex('$PercentColor'))),
-                      pw.SizedBox(width: 5),
-                      pw.Text('compared to last year',
-                          style: pw.TextStyle(
-                              fontSize: 15,
-                              font: ttfsemibold,
-                              color: PdfColor.fromHex('000000'))),
-                    ]),
-              ),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Peak Earning Month:',
-                      style: pw.TextStyle(fontSize: 20, font: ttf)),
-                  pw.Expanded(
-                      child: pw.Align(
-                    alignment: pw.Alignment.centerRight,
-                    child: pw.Text('$monthName - $formattedAmountPeak',
-                        style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
-                  ))
-                ]),
-            pw.SizedBox(height: 5),
-            pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Total Subscriptions:',
-                      style: pw.TextStyle(fontSize: 20, font: ttf)),
-                  pw.Expanded(
-                      child: pw.Align(
-                    alignment: pw.Alignment.centerRight,
-                    child: pw.Text('$totalSubscription',
-                        style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
-                  )),
-                ]),
-            pw.SizedBox(height: 15),
-            pw.Container(
-              decoration: pw.BoxDecoration(
-                border:
-                    pw.Border.all(color: PdfColor.fromHex('000000'), width: 1),
-                borderRadius: pw.BorderRadius.circular(6),
-              ),
-              child: pw.Padding(
+              pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Total Members:',
+                        style: pw.TextStyle(fontSize: 20, font: ttf)),
+                    pw.Expanded(
+                        child: pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text('$totalMembers',
+                          style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
+                    ))
+                  ]),
+              pw.SizedBox(height: 5),
+              pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Total Revenue:',
+                        style: pw.TextStyle(fontSize: 20, font: ttf)),
+                    pw.Expanded(
+                        child: pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text('$formattedAmount',
+                          style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
+                    ))
+                  ]),
+              pw.SizedBox(height: 10),
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(
+                      color: PdfColor.fromHex('000000'), width: 1),
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Padding(
                   padding: pw.EdgeInsets.all(8.0),
                   child: pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.center,
                       children: [
-                        pw.Text('members liked',
-                            style: pw.TextStyle(
-                                fontSize: 15,
-                                font: ttf,
-                                color: PdfColor.fromHex('000000'))),
-                        pw.SizedBox(width: 5),
-                        pw.Text('$repeatedPackage',
+                        pw.Text('your revenue has $percentText',
                             style: pw.TextStyle(
                                 fontSize: 15,
                                 font: ttfsemibold,
                                 color: PdfColor.fromHex('000000'))),
-                      ])),
-            ),
-            pw.SizedBox(height: 10),
-            pw.TableHelper.fromTextArray(
-              headers: ['Package Name', 'Count'],
-              cellAlignment: pw.Alignment.center,
-              cellStyle: pw.TextStyle(fontSize: 16, font: ttf),
-              headerStyle: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold, font: ttfsemibold),
-              headerDecoration: pw.BoxDecoration(color: PdfColors.grey300),
-              cellHeight: 30,
-              data: List<List<String>>.from(
-                subcriptionData.map((item) =>
-                    [item['name'] as String, item['count'].toString()]),
-              ),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Total Offers Applied:',
-                      style: pw.TextStyle(fontSize: 20, font: ttf)),
-                  pw.Expanded(
-                      child: pw.Align(
-                    alignment: pw.Alignment.centerRight,
-                    child: pw.Text('$offerAppliedCount',
-                        style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
-                  )),
-                ]),
-            pw.SizedBox(height: 30),
-
-            pw.Container(
-              width: double.infinity,
-              decoration: pw.BoxDecoration(
-                border: pw.Border(top: pw.BorderSide(width: 1.0)),
-              ),
-              child: pw.Padding(
-                padding: pw.EdgeInsets.all(8.0),
-                child: pw.Column(
-                  mainAxisAlignment: pw.MainAxisAlignment.center,
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    pw.Text(
-                      'KR Fitness Studio | Hyderabad',
-                      style: pw.TextStyle(fontSize: 18, font: ttfsemibold),
-                    ),
-                    pw.Text(
-                      '8-34, 1st Floor, Hema Nagar, Boduppal, Hyderabad',
-                      style: pw.TextStyle(fontSize: 14, font: ttf),
-                    ),
-                  ],
+                        pw.SizedBox(width: 5),
+                        pw.Text('${roundedPercentage.abs()}%',
+                            style: pw.TextStyle(
+                                fontSize: 15,
+                                font: ttfsemibold,
+                                color: PdfColor.fromHex('$PercentColor'))),
+                        pw.SizedBox(width: 5),
+                        pw.Text('compared to last year',
+                            style: pw.TextStyle(
+                                fontSize: 15,
+                                font: ttfsemibold,
+                                color: PdfColor.fromHex('000000'))),
+                      ]),
                 ),
               ),
-            ),
-          ],
-        );
+              pw.SizedBox(height: 10),
+              pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Peak Earning Month:',
+                        style: pw.TextStyle(fontSize: 20, font: ttf)),
+                    pw.Expanded(
+                        child: pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text('$monthName - $formattedAmountPeak',
+                          style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
+                    ))
+                  ]),
+              pw.SizedBox(height: 5),
+              pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Total Subscriptions:',
+                        style: pw.TextStyle(fontSize: 20, font: ttf)),
+                    pw.Expanded(
+                        child: pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text('$totalSubscription',
+                          style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
+                    )),
+                  ]),
+              pw.SizedBox(height: 15),
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(
+                      color: PdfColor.fromHex('000000'), width: 1),
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Padding(
+                    padding: pw.EdgeInsets.all(8.0),
+                    child: pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text('members liked',
+                              style: pw.TextStyle(
+                                  fontSize: 15,
+                                  font: ttf,
+                                  color: PdfColor.fromHex('000000'))),
+                          pw.SizedBox(width: 5),
+                          pw.Text('$repeatedPackage',
+                              style: pw.TextStyle(
+                                  fontSize: 15,
+                                  font: ttfsemibold,
+                                  color: PdfColor.fromHex('000000'))),
+                        ])),
+              ),
+              pw.SizedBox(height: 10),
+              pw.TableHelper.fromTextArray(
+                headers: ['Package Name', 'Count'],
+                cellAlignment: pw.Alignment.center,
+                cellStyle: pw.TextStyle(fontSize: 16, font: ttf),
+                headerStyle: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold, font: ttfsemibold),
+                headerDecoration: pw.BoxDecoration(color: PdfColors.grey300),
+                cellHeight: 30,
+                data: List<List<String>>.from(
+                  subcriptionData.map((item) =>
+                      [item['name'] as String, item['count'].toString()]),
+                ),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Total Offers Applied:',
+                        style: pw.TextStyle(fontSize: 20, font: ttf)),
+                    pw.Expanded(
+                        child: pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text('$offerAppliedCount',
+                          style: pw.TextStyle(fontSize: 20, font: ttfsemibold)),
+                    )),
+                  ]),
+              pw.SizedBox(height: 30),
+
+              pw.Container(
+                width: double.infinity,
+                decoration: pw.BoxDecoration(
+                  border: pw.Border(top: pw.BorderSide(width: 1.0)),
+                ),
+                child: pw.Padding(
+                  padding: pw.EdgeInsets.all(8.0),
+                  child: pw.Column(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text(
+                        'KR Fitness Studio | Hyderabad',
+                        style: pw.TextStyle(fontSize: 18, font: ttfsemibold),
+                      ),
+                      pw.Text(
+                        '8-34, 1st Floor, Hema Nagar, Boduppal, Hyderabad',
+                        style: pw.TextStyle(fontSize: 14, font: ttf),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          )
+        ];
       },
     ));
     String randomFilename = Uuid().v4();

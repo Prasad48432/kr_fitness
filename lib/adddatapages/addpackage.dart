@@ -71,7 +71,7 @@ class _AddPackageState extends State<AddPackage> {
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
                       child: Text(
-                        'Personal Training', // Your desired text
+                        'Personal Training Package?', // Your desired text
                         style: TextStyle(
                           color: Colors.black, // Customize the text color
                           fontSize: 16, // Customize the text size

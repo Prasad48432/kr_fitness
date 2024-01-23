@@ -253,7 +253,7 @@ class _ClientSpecificPaymentState extends State<ClientSpecificPayment> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Icon(LineIcons.amazonPay,
+                            const Icon(Icons.currency_exchange,
                                 color: Colors.black, size: 20),
                             const SizedBox(width: 8),
                             const Text('Payment Mode :',

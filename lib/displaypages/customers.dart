@@ -95,7 +95,7 @@ class _CustomersState extends State<Customers> {
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 10.0, horizontal: 15),
-                          prefixIcon: const Icon(LineIcons.search),
+                          prefixIcon: const Icon(Icons.search),
                           hintText: 'Search...',
                           border: InputBorder.none,
                         ),

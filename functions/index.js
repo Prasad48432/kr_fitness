@@ -242,14 +242,6 @@
 //     const todayTimestamp = admin.firestore.Timestamp.now();
 //     const today = todayTimestamp.toDate();
 
-//   // Fetch the FCM token from Firestore
-//   const globalVariablesDoc = await admin.firestore().collection('Variables').doc('GlobalVariables').get();
-//   const fcmToken = globalVariablesDoc.data()?.fcmtoken;
-
-//   if (!fcmToken) {
-//     console.error('FCM token not found in GlobalVariables document.');
-//     return null;
-//   }
 
 //   const subscriptionsSnapshot = await admin.firestore().collection('Subscriptions')
 //     .where('active', '==', true)
@@ -273,21 +265,31 @@
 
 
 //   if (counter > 0) {
-//     const message = {
-//       notification: {
-//         title: 'Subscription and Reminder',
-//         body: `Hey Umesh, there are ${counter} client subscriptions to be addressed today. Please take action.`,
-//       },
-//       token: fcmToken, // Use the fetched FCM token
-//     };
+//         const userRolesSnapshot = await admin.firestore().collection('UserRoles')
+//             .where('notifications', '==', true)
+//             .get();
 
-//     admin.messaging().send(message)
-//     .then((response) => {
-//         console.log('Notification sent successfully:', response);
-//     })
-//     .catch((error) => {
-//         console.error('Error sending notification:', error);
-//     });
+//         userRolesSnapshot.forEach((userRoleDoc) => {
+//             const userRole = userRoleDoc.data();
+//             const fcmToken = userRole.FCMtoken; // Replace with your actual field name for FCM token
+//             const name = userRole.name;
+
+//             const message = {
+//                 notification: {
+//                     title: 'Members Subscription Reminder',
+//                     body: `Hey ${name}, there are ${counter} Members to be Addressed today. Please take action.`,
+//                 },
+//                 token: fcmToken, // Use the fetched FCM token
+//             };
+
+//             admin.messaging().send(message)
+//                 .then((response) => {
+//                     console.log('Notification sent successfully:', response);
+//                 })
+//                 .catch((error) => {
+//                     console.error('Error sending notification:', error);
+//                 });
+//         });
 //   }
 
 //   return null;
@@ -301,60 +303,61 @@
 // const admin = require('firebase-admin');
 // admin.initializeApp();
 
-// exports.dailyNotificationForOverdue = functions.pubsub.schedule('every 1 minutes').timeZone('Asia/Kolkata').onRun(async (context) => {
+// exports.dailyNotificationForOverdueSubscriptions = functions.pubsub.schedule('every 1 minutes').timeZone('Asia/Kolkata').onRun(async (context) => {
 //     const today = new Date();
 //     today.setHours(0, 0, 0, 0);
 
-//   // Fetch the FCM token from Firestore
-//   const globalVariablesDoc = await admin.firestore().collection('Variables').doc('GlobalVariables').get();
-//   const fcmToken = globalVariablesDoc.data()?.fcmtoken;
+//     const subscriptionsSnapshot = await admin.firestore().collection('Subscriptions')
+//         .where('active', '==', true)
+//         .get();
 
-//   if (!fcmToken) {
-//     console.error('FCM token not found in GlobalVariables document.');
-//     return null;
-//   }
+//     let counter = 0; // Counter for subscriptions ending today or with pending payments
 
-//   const subscriptionsSnapshot = await admin.firestore().collection('Subscriptions')
-//     .where('active', '==', true)
-//     .get();
+//     subscriptionsSnapshot.forEach((doc) => {
+//         const subscription = doc.data();
 
-//   let counter = 0; // Counter for subscriptions ending today or with pending payments
-
-//   subscriptionsSnapshot.forEach((doc) => {
-//     const subscription = doc.data();
-
-//     const endDate = new Date(subscription.enddate.toDate());
-//     endDate.setHours(endDate.getHours() + 5); // Add 5 hours
-//     endDate.setMinutes(endDate.getMinutes() + 30); 
+//         const endDate = new Date(subscription.enddate.toDate());
+//         endDate.setHours(endDate.getHours() + 5); // Add 5 hours
+//         endDate.setMinutes(endDate.getMinutes() + 30);
 
 
-    
-//     // Check if subscription is ending today
-//     if (endDate < today) {
-//       counter++;
-//     }
-//   });
 
-
-//   if (counter > 0) {
-//     const message = {
-//       notification: {
-//         title: 'Subscription and Reminder',
-//         body: `Hey Umesh, there are ${counter} client subscriptions Which are Overdue. Please take action.`,
-//       },
-//       token: fcmToken, // Use the fetched FCM token
-//     };
-
-//     admin.messaging().send(message)
-//     .then((response) => {
-//         console.log('Notification sent successfully:', response);
-//     })
-//     .catch((error) => {
-//         console.error('Error sending notification:', error);
+//         // Check if subscription is ending today
+//         if (endDate < today) {
+//             counter++;
+//         }
 //     });
-//   }
 
-//   return null;
+
+//     if (counter > 0) {
+//         const userRolesSnapshot = await admin.firestore().collection('UserRoles')
+//             .where('notifications', '==', true)
+//             .get();
+
+//         userRolesSnapshot.forEach((userRoleDoc) => {
+//             const userRole = userRoleDoc.data();
+//             const fcmToken = userRole.FCMtoken; // Replace with your actual field name for FCM token
+//             const name = userRole.name;
+
+//             const message = {
+//                 notification: {
+//                     title: 'Overdue Members Reminder',
+//                     body: `Hey ${name}, there are ${counter} client subscriptions Which are Overdue. Please take action.`,
+//                 },
+//                 token: fcmToken, // Use the fetched FCM token
+//             };
+
+//             admin.messaging().send(message)
+//                 .then((response) => {
+//                     console.log('Notification sent successfully:', response);
+//                 })
+//                 .catch((error) => {
+//                     console.error('Error sending notification:', error);
+//                 });
+//         });
+//     }
+
+//     return null;
 // });
   
 

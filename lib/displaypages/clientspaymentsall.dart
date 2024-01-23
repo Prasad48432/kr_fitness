@@ -18,54 +18,6 @@ class _ClientPaymentsAllState extends State<ClientPaymentsAll> {
   final CollectionReference paymentsCollection =
       FirebaseFirestore.instance.collection('Payments');
 
-  bool _todaySelected = false;
-  bool _weekSelected = false;
-  bool _monthSelected = false;
-  bool _customSelected = false;
-  bool _yearSelected = false;
-
-  DateTime _getStartDate() {
-    if (_customSelected) {
-      return _startDate ??
-          DateTime(1900, 1, 1); // Use a default value if _startDate is null
-    }
-    DateTime currentDate = DateTime.now();
-    if (_todaySelected) {
-      return DateTime(currentDate.year, currentDate.month, currentDate.day);
-    } else if (_weekSelected) {
-      return currentDate.subtract(const Duration(days: 7));
-    } else if (_monthSelected) {
-      return currentDate.subtract(const Duration(days: 30));
-    } else if (_yearSelected) {
-      return currentDate.subtract(const Duration(days: 365));
-    } else {
-      // If none is selected, return the earliest date possible or modify as needed
-      return DateTime(1900, 1, 1);
-    }
-  }
-
-  DateTime? _startDate = DateTime.now().subtract(const Duration(days: 7));
-  DateTime? _endDate = DateTime.now();
-
-  Future<void> _showDateRangePicker() async {
-    DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-      initialDateRange: DateTimeRange(
-        start: _startDate ?? DateTime.now(),
-        end: _endDate ?? DateTime.now(),
-      ),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-    }
-  }
-
   @override
   void initState() {
     // TODO: implement initState
@@ -92,10 +44,6 @@ class _ClientPaymentsAllState extends State<ClientPaymentsAll> {
       });
       final collectionReference = _firestore
           .collection('Payments')
-          .where('timestamp', isGreaterThanOrEqualTo: _getStartDate())
-          .where('timestamp',
-              isLessThanOrEqualTo:
-                  (_endDate ?? DateTime.now()).add(const Duration(days: 1)))
           .orderBy('timestamp', descending: true);
 
       late QuerySnapshot<Map<String, dynamic>> querySnapshot;
@@ -234,67 +182,4 @@ class _ClientPaymentsAllState extends State<ClientPaymentsAll> {
     );
   }
 
-  Widget _buildShimmerEffect() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: ListView.builder(
-        itemCount: 10, // Adjust the number of shimmer items as needed
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-            decoration: const BoxDecoration(
-              border:
-                  Border(bottom: BorderSide(color: Colors.black54, width: 1.0)),
-            ),
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 6.0, vertical: 0.0),
-              tileColor: Colors.white,
-              leading: CircleAvatar(
-                radius: 25,
-                backgroundColor: Colors.grey[300],
-              ),
-              title: Container(
-                width: 10,
-                height: 13,
-                color: Colors.grey[300],
-              ),
-              subtitle: Container(
-                width: 20,
-                height: 13,
-                color: Colors.grey[300],
-              ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 13,
-                    color: Colors.grey[300],
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Container(
-                    width: 70,
-                    height: 13,
-                    color: Colors.grey[300],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      alignment: Alignment.center,
-      child: CircularProgressIndicator(),
-    );
-  }
 }
