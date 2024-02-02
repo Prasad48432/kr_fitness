@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:kr_fitness/adddatapages/addclient.dart';
 import 'package:kr_fitness/adddatapages/addclientsubscription.dart';
 import 'package:kr_fitness/adddatapages/addrole.dart';
+import 'package:kr_fitness/displaypages/activememberships.dart';
 import 'package:kr_fitness/displaypages/analysispage.dart';
 import 'package:kr_fitness/displaypages/clientpayments.dart';
 import 'package:kr_fitness/displaypages/customerdetails.dart';
@@ -25,10 +26,12 @@ import 'package:kr_fitness/displaypages/packageoffers.dart';
 import 'package:kr_fitness/displaypages/packages.dart';
 import 'package:kr_fitness/displaypages/pendingpayments.dart';
 import 'package:kr_fitness/displaypages/personaltrainingclients.dart';
+import 'package:kr_fitness/displaypages/settings.dart';
 import 'package:kr_fitness/utils/color.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:kr_fitness/widgets/task_group.dart';
@@ -36,11 +39,13 @@ import 'package:line_icons/line_icons.dart';
 import 'package:toast/toast.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'dart:async';
 import '../utils/caluculationfunctions.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class Dashboard extends StatefulWidget {
   final VoidCallback onLogout;
@@ -89,10 +94,14 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   bool isButtonLoading = false;
   bool notificationsEnabled = true;
+  String _version = '';
+  String _newVersion = '';
+  String downloadURL = '';
 
   @override
   void initState() {
     super.initState();
+    requestPermission();
     _auth = FirebaseAuth.instance.currentUser;
     uid = _auth?.uid;
     gridItems = [
@@ -106,11 +115,102 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     globalFetch();
     initNotifications();
     initializeStatus();
+    _fetchVariables();
+    getVersionNumber();
     setState(() {});
+  }
+
+  Future<void> requestPermission() async {
+    // Request the READ_EXTERNAL_STORAGE permission
+    var status = await Permission.storage.request();
+    if (status.isDenied) {
+      // Permission denied, handle accordingly
+    }
   }
 
   Future<void> globalFetch() async {
     await GlobalVariablesUse.initialize();
+  }
+
+  void _fetchVariables() async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> globalVariablesSnapshot =
+          await FirebaseFirestore.instance
+              .collection('Variables')
+              .doc('GlobalVariables')
+              .get();
+
+      if (globalVariablesSnapshot.exists) {
+        setState(() {
+          _newVersion =
+              (globalVariablesSnapshot.data()?['version'] ?? '').toString();
+          downloadURL = (globalVariablesSnapshot.data()?['download_url'] ?? '')
+              .toString();
+        });
+      }
+    } catch (e) {
+      // print("Error fetching global variables: $e");
+    }
+  }
+
+  void getVersionNumber() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = packageInfo.version;
+    });
+    await Future.delayed(Duration(seconds: 3));
+    checkVersion();
+  }
+
+  void checkVersion() {
+    if (_version != _newVersion && _version != '') {
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent user from dismissing dialog
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Update Required'),
+            content: Text(
+                'A new version of the app is available. Please update to continue using the app.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  downloadAndOpenApk();
+                  Navigator.pop(context);
+                  Toast.show('Download Update...',
+                      backgroundColor: Colors.blue,
+                      duration: Toast.lengthShort,
+                      gravity: Toast.bottom);
+                },
+                child: Text('Download'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the dialog
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> downloadAndOpenApk() async {
+    try {
+      final Uri uri = Uri.parse(downloadURL);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+        );
+      } else {
+        throw 'Could not launch $downloadURL';
+      }
+    } catch (e) {
+      print('Error downloading/opening APK: $e');
+    }
   }
 
   Future<void> initNotifications() async {
@@ -132,6 +232,13 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
               .collection('UserRoles')
               .doc(userUid)
               .update({'FCMtoken': fcmToken});
+        } else if (userData['FCMtoken'] != fcmToken) {
+          await FirebaseFirestore.instance
+              .collection('UserRoles')
+              .doc(userUid)
+              .update({'FCMtoken': fcmToken});
+        } else {
+          ///
         }
       }
     } catch (e) {
@@ -588,8 +695,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     key: ValueKey<bool>(notificationsEnabled),
                     icon: Icon(
                       notificationsEnabled
-                          ? Icons.notifications_on
-                          : Icons.notifications_off,
+                          ? Icons.notifications_on_outlined
+                          : Icons.notifications_off_outlined,
                       size: 25,
                       color: Colors.black,
                     ),
@@ -1213,7 +1320,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             TitleColor: const Color.fromARGB(255, 103, 198, 106),
             IconColor: const Color.fromARGB(255, 103, 198, 106),
             color: AppColors.primaryBackground,
-            icon: Icons.money,
+            icon: LineIcons.moneyBill,
             subtitleFontSize: 8,
             taskCount: "Income ($totalIncomeToday₹ Today)",
             taskGroup:
@@ -1234,13 +1341,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             IconColor: Colors.white,
             subtitleFontSize: 10,
             color: AppColors.primaryBackground,
-            icon: LineIcons.clock,
+            icon: Icons.exit_to_app,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const EndingTodayCustomers()));
+                  builder: (context) => NearedCustomers(
+                        onGoingBack: _handleRefresh,
+                      )));
             },
-            taskCount: "Membership Ending",
-            taskGroup: "Ending Today",
+            taskCount: "Members Days Left",
+            taskGroup: "Days Left",
           ),
         ),
         StaggeredGridTile.count(
@@ -1251,15 +1360,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             IconColor: Colors.white,
             subtitleFontSize: 10,
             color: AppColors.primaryBackground,
-            icon: Icons.exit_to_app,
+            icon: Icons.how_to_reg,
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => NearedCustomers(
-                        onGoingBack: _handleRefresh,
+                  builder: (context) => ActiveMemberships(
+                        fromHome: true,
                       )));
             },
-            taskCount: "Members Days Left",
-            taskGroup: "Days Left",
+            taskCount: "Active Memberships",
+            taskGroup: "Memberships",
           ),
         ),
         StaggeredGridTile.count(
@@ -2025,6 +2134,59 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       ),
                       child: ListTile(
                         title: const Text(
+                          'Active Memberships',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                        leading: const Icon(
+                          LineIcons.userTag,
+                          color: Colors.black,
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ActiveMemberships(
+                                fromHome: true,
+                              ),
+                            ),
+                          );
+                          _scaffoldKey.currentState?.closeDrawer();
+                        },
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 5),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 250, 250, 250),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        title: const Text(
+                          'Ending Today Subs',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                        leading: const Icon(
+                          LineIcons.clock,
+                          color: Colors.black,
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const EndingTodayCustomers(),
+                            ),
+                          );
+                          _scaffoldKey.currentState?.closeDrawer();
+                        },
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 5),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 250, 250, 250),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        title: const Text(
                           'Personal Training',
                           style: TextStyle(fontSize: 15),
                         ),
@@ -2233,6 +2395,34 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                           );
                           _scaffoldKey.currentState?.closeDrawer();
                         },
+                      ),
+                    ),
+                    Visibility(
+                      visible: GlobalVariablesUse.role == 'Owner',
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 5),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 250, 250, 250),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ListTile(
+                          title: const Text(
+                            'Message Settings',
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          leading: const Icon(
+                            LineIcons.cog,
+                            color: Colors.black,
+                          ),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const SettingsPage(),
+                              ),
+                            );
+                            _scaffoldKey.currentState?.closeDrawer();
+                          },
+                        ),
                       ),
                     ),
                     Container(

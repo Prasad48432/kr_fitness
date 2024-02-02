@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_switch/flutter_switch.dart';
 import 'package:kr_fitness/displaypages/dashboard.dart';
 import 'package:kr_fitness/models/clients.dart';
 import 'package:kr_fitness/adddatapages/addclient.dart';
@@ -21,6 +22,7 @@ class Customers extends StatefulWidget {
 class _CustomersState extends State<Customers> {
   List<Clients> clientsData = [];
   String name = "";
+  bool searchType = true;
   final TextEditingController _textEditingController = TextEditingController();
 
   @override
@@ -79,6 +81,40 @@ class _CustomersState extends State<Customers> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text(
+                  'Search Type',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  'Member ID',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w300),
+                ),
+                FlutterSwitch(
+                  value: searchType,
+                  onToggle: (value) {
+                    FocusScope.of(context).unfocus();
+                    setState(() {
+                      searchType = value;
+                    });
+                  },
+                  toggleSize: 10,
+                  width: 40,
+                  height: 20,
+                  activeColor: Colors.green, // set the color when it is true
+                  inactiveColor: Colors.blue,
+                ),
+                Text(
+                  'Member Name',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w300),
+                ),
+              ],
+            ),
+          ),
           Container(
             color: const Color.fromARGB(255, 255, 255, 255),
             child: Padding(
@@ -91,6 +127,9 @@ class _CustomersState extends State<Customers> {
                   children: [
                     Expanded(
                       child: TextField(
+                        keyboardType: searchType
+                            ? TextInputType.text
+                            : TextInputType.number,
                         controller: _textEditingController,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(
@@ -147,11 +186,14 @@ class _CustomersState extends State<Customers> {
                     itemBuilder: (context, index) {
                       var data = snapshot.data!.docs[index].data();
 
-                      if (name.isEmpty ||
-                          data['name']
-                              .toString()
-                              .toLowerCase()
-                              .startsWith(name.toLowerCase())) {
+                      if (searchType
+                          ? (name.isEmpty ||
+                              data['name']
+                                  .toString()
+                                  .toLowerCase()
+                                  .startsWith(name.toLowerCase()))
+                          : (name.isEmpty ||
+                              data['memberid'] == int.parse(name))) {
                         return Card(
                           color: Colors.white,
                           elevation: 0,

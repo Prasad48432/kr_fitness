@@ -239,60 +239,73 @@
 // admin.initializeApp();
 
 // exports.dailyNotificationForEndingSubscriptions = functions.pubsub.schedule('every 1 minutes').timeZone('Asia/Kolkata').onRun(async (context) => {
+
+
+//     const settingsSnapshot = await admin
+//         .firestore()
+//         .collection('Settings')
+//         .doc('MessageSettings')
+//         .get();
+
+//     const settingsData = settingsSnapshot.data();
+//     const isSubscriptionReminderEnabled =
+//         settingsData && settingsData.subscription_reminder_messages;
 //     const todayTimestamp = admin.firestore.Timestamp.now();
 //     const today = todayTimestamp.toDate();
 
 
-//   const subscriptionsSnapshot = await admin.firestore().collection('Subscriptions')
-//     .where('active', '==', true)
-//     .get();
+//     const subscriptionsSnapshot = await admin.firestore().collection('Subscriptions')
+//         .where('active', '==', true)
+//         .get();
 
-//   let counter = 0; // Counter for subscriptions ending today or with pending payments
+//     let counter = 0; // Counter for subscriptions ending today or with pending payments
 
-//   subscriptionsSnapshot.forEach((doc) => {
-//     const subscription = doc.data();
+//     subscriptionsSnapshot.forEach((doc) => {
+//         const subscription = doc.data();
 
-//     const adjustedEndDate = new Date(subscription.enddate.toDate());
-//     adjustedEndDate.setHours(adjustedEndDate.getHours() + 5);
-//     adjustedEndDate.setMinutes(adjustedEndDate.getMinutes() + 30);
+//         const adjustedEndDate = new Date(subscription.enddate.toDate());
+//         adjustedEndDate.setHours(adjustedEndDate.getHours() + 5);
+//         adjustedEndDate.setMinutes(adjustedEndDate.getMinutes() + 30);
 
-    
-//     // Check if subscription is ending today
-//     if (adjustedEndDate.toLocaleDateString('en-IN') === today.toLocaleDateString('en-IN')) {
-//       counter++;
+
+//         // Check if subscription is ending today
+//         if (adjustedEndDate.toLocaleDateString('en-IN') === today.toLocaleDateString('en-IN')) {
+//             counter++;
+//         }
+//     });
+
+
+//     if (counter > 0) {
+//         if (isSubscriptionReminderEnabled == true) {
+//             const userRolesSnapshot = await admin.firestore().collection('UserRoles')
+//                 .where('notifications', '==', true)
+//                 .get();
+
+//             userRolesSnapshot.forEach((userRoleDoc) => {
+//                 const userRole = userRoleDoc.data();
+//                 const fcmToken = userRole.FCMtoken; // Replace with your actual field name for FCM token
+//                 const name = userRole.name;
+
+//                 const message = {
+//                     notification: {
+//                         title: 'Members Subscription Reminder',
+//                         body: `Hey ${name}, there are ${counter} Members to be Addressed today. Please take action.`,
+//                     },
+//                     token: fcmToken, // Use the fetched FCM token
+//                 };
+
+//                 admin.messaging().send(message)
+//                     .then((response) => {
+//                         console.log('Notification sent successfully:', response);
+//                     })
+//                     .catch((error) => {
+//                         console.error('Error sending notification:', error);
+//                     });
+//             });
+//         }
 //     }
-//   });
 
-
-//   if (counter > 0) {
-//         const userRolesSnapshot = await admin.firestore().collection('UserRoles')
-//             .where('notifications', '==', true)
-//             .get();
-
-//         userRolesSnapshot.forEach((userRoleDoc) => {
-//             const userRole = userRoleDoc.data();
-//             const fcmToken = userRole.FCMtoken; // Replace with your actual field name for FCM token
-//             const name = userRole.name;
-
-//             const message = {
-//                 notification: {
-//                     title: 'Members Subscription Reminder',
-//                     body: `Hey ${name}, there are ${counter} Members to be Addressed today. Please take action.`,
-//                 },
-//                 token: fcmToken, // Use the fetched FCM token
-//             };
-
-//             admin.messaging().send(message)
-//                 .then((response) => {
-//                     console.log('Notification sent successfully:', response);
-//                 })
-//                 .catch((error) => {
-//                     console.error('Error sending notification:', error);
-//                 });
-//         });
-//   }
-
-//   return null;
+//     return null;
 // });
 
 

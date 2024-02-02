@@ -10,6 +10,7 @@ class TaskGroupContainer extends StatelessWidget {
   final Color IconColor;
   final Color TitleColor; // Added onTap parameter
   final double subtitleFontSize;
+  final double? titleFontSize;
 
   const TaskGroupContainer({
     Key? key,
@@ -20,6 +21,7 @@ class TaskGroupContainer extends StatelessWidget {
     required this.taskCount,
     required this.IconColor,
     required this.TitleColor,
+    this.titleFontSize,
     required this.subtitleFontSize,
     this.onTap, // Added onTap parameter
   }) : super(key: key);
@@ -59,7 +61,7 @@ class TaskGroupContainer extends StatelessWidget {
               overflow: TextOverflow.fade,
               style: TextStyle(
                 color: TitleColor,
-                fontSize: 16,
+                fontSize: titleFontSize != null ? titleFontSize : 16,
                 fontWeight: FontWeight.bold,
               ),
             ),

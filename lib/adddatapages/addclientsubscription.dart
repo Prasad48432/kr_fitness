@@ -154,6 +154,23 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
     }
   }
 
+  Future<int> getMemberID(String clientid) async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+          .instance
+          .collection('Clients')
+          .doc(clientid)
+          .get();
+
+      int memberid = snapshot.data()?['memberid'] ?? 0;
+      print('member id fetched is $memberid');
+      return memberid;
+    } catch (e) {
+      print("Error checking package existence: $e");
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ToastContext().init(context);
@@ -545,6 +562,7 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                         String clientIdf = widget.id;
                         // Update the status of existing subscriptions for the same clientid
                         await updateSubscriptionStatus(clientIdf);
+                        int memberid = await getMemberID(widget.id);
                         String package =
                             _formKey.currentState!.value['package'].toString();
                         int totalAmount = int.parse(_formKey
@@ -591,6 +609,7 @@ class _AddClientSubscriptionState extends State<AddClientSubscription>
                           DocumentReference documentReference =
                               await _reference.add({
                             'clientid': clientId,
+                            'memberid': memberid,
                             'package': package,
                             'totalamount': totalAmount,
                             'amountpaid': amountPaid,

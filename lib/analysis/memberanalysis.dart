@@ -46,13 +46,13 @@ class _MemberAnalysisState extends State<MemberAnalysis> {
   Future<void> fetchData() async {
     try {
       DateTime startDate = DateTime(selectedYear, 1, 1);
-      DateTime endDate = DateTime(selectedYear, 12, 31);
+      DateTime endDate = DateTime(selectedYear + 1, 1, 1);
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Clients')
           .where(
             'timestamp',
             isGreaterThanOrEqualTo: startDate,
-            isLessThanOrEqualTo: endDate,
+            isLessThan: endDate,
           )
           .get();
 

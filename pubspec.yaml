@@ -68,6 +68,8 @@ dependencies:
   flutter_svg: ^2.0.9
   dash_chat_2: ^0.0.19
   chat_gpt_sdk: ^2.2.8
+  package_info_plus: ^5.0.1
+  permission_handler: ^11.2.0
   
 
 flutter_native_splash:

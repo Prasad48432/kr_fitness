@@ -35,7 +35,6 @@ class _PieChartPageState extends State<PieChartPage> {
     const Color(0xFFEA8FEA),
     const Color(0xFF43766C),
     const Color(0xFF2D3250),
-
   ];
 
   @override
@@ -47,7 +46,7 @@ class _PieChartPageState extends State<PieChartPage> {
   Future<void> fetchDataForPieChart() async {
     try {
       DateTime startDate = DateTime(selectedYear, 1, 1);
-      DateTime endDate = DateTime(selectedYear, 12, 31);
+      DateTime endDate = DateTime(selectedYear + 1, 1, 1);
 
       // Fetch 'Packages' data
       QuerySnapshot packageSnapshot =
@@ -62,7 +61,7 @@ class _PieChartPageState extends State<PieChartPage> {
           .where(
             'timestamp',
             isGreaterThanOrEqualTo: startDate,
-            isLessThanOrEqualTo: endDate,
+            isLessThan: endDate,
           )
           .get();
 

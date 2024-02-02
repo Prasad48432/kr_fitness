@@ -370,7 +370,7 @@ class _AddClientState extends State<AddClient> {
                       ),
                       decoration: InputDecoration(
                         prefixIcon: Icon(
-                          Icons.engineering_outlined,
+                          LineIcons.userAstronaut,
                           color: Colors.black87,
                         ),
                         border: OutlineInputBorder(),
@@ -468,6 +468,25 @@ class _AddClientState extends State<AddClient> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
+                  child: FormBuilderTextField(
+                    name: 'address',
+                    style: TextStyle(color: Colors.black),
+                    validator: FormBuilderValidators.required(
+                        errorText: 'please enter a location'),
+                    decoration: const InputDecoration(
+                        prefixIcon: Icon(
+                          LineIcons.mapMarked,
+                          color: Colors.black87,
+                        ),
+                        border: OutlineInputBorder(),
+                        label: Text("Address"),
+                        labelStyle: TextStyle(color: Colors.black87),
+                        focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.black))),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         minimumSize: const Size.fromHeight(50),
@@ -507,6 +526,24 @@ class _AddClientState extends State<AddClient> {
                           });
                           await Future.delayed(Duration(seconds: 1));
 
+                          QuerySnapshot<Map<String, dynamic>> latestClient =
+                              await FirebaseFirestore.instance
+                                  .collection('Clients')
+                                  .orderBy('timestamp', descending: true)
+                                  .limit(1)
+                                  .get();
+
+                          int latestMemberId = 0;
+
+                          // Check if there is any document
+                          if (latestClient.docs.isNotEmpty) {
+                            latestMemberId =
+                                latestClient.docs.first['memberid'] as int;
+                          }
+
+                          // Increment memberid by 1
+                          int newMemberId = latestMemberId + 1;
+
                           String name =
                               _formKey.currentState!.value['name'].toString();
                           String selectedGender =
@@ -525,6 +562,9 @@ class _AddClientState extends State<AddClient> {
                           String? trainer =
                               _formKey.currentState!.value['trainer'];
 
+                          String address =
+                              _formKey.currentState!.value['address'];
+
                           Map<String, dynamic> dataToSend = {
                             'name': name,
                             'gender': selectedGender,
@@ -535,6 +575,8 @@ class _AddClientState extends State<AddClient> {
                             'personaltraining': personaltraining,
                             'timestamp': FieldValue.serverTimestamp(),
                             'trainerid': trainer,
+                            'memberid': newMemberId,
+                            'address': address
                           };
                           _reference.add(dataToSend).then((value) {
                             Toast.show(

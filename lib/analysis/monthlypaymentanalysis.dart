@@ -72,7 +72,7 @@ class _MonthlyPaymentsState extends State<MonthlyPayments> {
   Future<void> fetchMonthlyData() async {
     try {
       DateTime startDate = DateTime(selectedYear, 1, 1);
-      DateTime endDate = DateTime(selectedYear, 12, 31);
+      DateTime endDate = DateTime(selectedYear + 1, 1, 1);
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Payments')
           .where(
@@ -85,6 +85,8 @@ class _MonthlyPaymentsState extends State<MonthlyPayments> {
       List<Map<String, dynamic>> payments = querySnapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
+
+      print('payments are $payments');
 
       setState(() {
         monthlyTotal = calculateMonthlyTotal(payments);

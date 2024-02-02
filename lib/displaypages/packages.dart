@@ -29,6 +29,7 @@ class _PackagesState extends State<Packages> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: const Text('Edit Package'),
           content: Column(
             mainAxisSize: MainAxisSize.min,

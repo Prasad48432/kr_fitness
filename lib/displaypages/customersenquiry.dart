@@ -48,60 +48,57 @@ class _CustomersEnquiryState extends State<CustomersEnquiry> {
                     border: Border(
                         bottom: BorderSide(color: Colors.black38, width: 1.0)),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      title: Text(
-                        name,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(
-                        'contact: $contact',
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w500),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              LineIcons.phone,
-                              color: Colors.black,
-                              size: 30,
-                            ),
-                            onPressed: () async {
-                              final Uri smsLaunchUri = Uri(
-                                scheme: 'tel',
-                                path: '+91 ' +
-                                    contact.toString().substring(0, 4) +
-                                    '-' +
-                                    contact.toString().substring(4),
-                              );
-                              if (await canLaunchUrl(smsLaunchUri)) {
-                                await launchUrl(smsLaunchUri);
-                              } else {
-                                print('error');
-                              }
-                            },
+                  child: ListTile(
+                    title: Text(
+                      name,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: Text(
+                      'contact: $contact',
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            LineIcons.phone,
+                            color: Colors.black,
+                            size: 30,
                           ),
-                          const SizedBox(
-                            width: 13,
-                          ),
-                          FlutterSwitch(
-                            value: active,
-                            onToggle: (value) {
-                              updateActiveStatus(contact, value);
-                            },
-                            toggleSize: 20,
-                            width: 50,
-                            height: 30,
-                            activeColor:
-                                Colors.green, // set the color when it is true
-                            inactiveColor: Colors.grey,
-                          ),
-                        ],
-                      ),
+                          onPressed: () async {
+                            final Uri smsLaunchUri = Uri(
+                              scheme: 'tel',
+                              path: '+91 ' +
+                                  contact.toString().substring(0, 4) +
+                                  '-' +
+                                  contact.toString().substring(4),
+                            );
+                            if (await canLaunchUrl(smsLaunchUri)) {
+                              await launchUrl(smsLaunchUri);
+                            } else {
+                              print('error');
+                            }
+                          },
+                        ),
+                        const SizedBox(
+                          width: 13,
+                        ),
+                        FlutterSwitch(
+                          value: active,
+                          onToggle: (value) {
+                            updateActiveStatus(contact, value);
+                          },
+                          toggleSize: 20,
+                          width: 50,
+                          height: 30,
+                          activeColor:
+                              Colors.green, // set the color when it is true
+                          inactiveColor: Colors.grey,
+                        ),
+                      ],
                     ),
                   ),
                 ),

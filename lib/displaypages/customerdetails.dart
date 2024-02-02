@@ -13,6 +13,7 @@ import 'package:kr_fitness/displaypages/personaltraining.dart';
 import 'package:kr_fitness/utils/color.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toast/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -57,18 +58,42 @@ class _CustomerDetailsState extends State<CustomerDetails>
   int daysLeftforRenewal = 0;
   late TabController _tabController;
   Map<String, dynamic> dataPT = {};
+  bool isvisiblePersonal = false;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
+    fetchVisibility();
     clientDetails = getClientDetails();
     _subscriptionCountFuture = fetchSubscriptionCount(widget.id);
     _paymentPendingFuture = fetchPaymentPending(widget.id);
     updateButtonColor();
     fetchSubscriptionDetailsforRenewal();
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  Future<void> fetchVisibility() async {
+    try {
+      DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+          .collection('Clients')
+          .doc(widget.id)
+          .get();
+
+      // Check if the document exists and contains the "personaltraining" field
+      if (documentSnapshot.exists) {
+        // Get the boolean value of "personaltraining" field
+        bool personalTraining = documentSnapshot['personaltraining'] ?? false;
+
+        setState(() {
+          isvisiblePersonal = personalTraining; // Update visibility state
+        });
+      }
+    } catch (error) {
+      // Handle any errors that occur during fetching
+      print('Error fetching visibility: $error');
+    }
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>> getClientDetails() async {
@@ -112,6 +137,11 @@ class _CustomerDetailsState extends State<CustomerDetails>
     }
   }
 
+  Future<void> _handleRefresh() async {
+    fetchVisibility();
+    setState(() {});
+  }
+
   Stream<List<Map<String, dynamic>>> fetchPersonalTrainingData() {
     try {
       return FirebaseFirestore.instance
@@ -137,239 +167,331 @@ class _CustomerDetailsState extends State<CustomerDetails>
     return Scaffold(
       key: _scaffoldKey,
       appBar: appBar(context),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              future: clientDetails,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LinearProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else if (!snapshot.hasData || !snapshot.data!.exists) {
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    if (!alreadyUpdated) {
-                      setState(() {
-                        showplus = false;
-                        alreadyUpdated = true;
-                        activeToggle = false;
-                      });
-                    }
-                  });
-                  return const Column(
-                    children: [
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(2.0),
-                        child: Text(
-                          'This Client has been Deleted',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(2.0),
-                        child: Text('Here are his Past Subscriptions'),
-                      ),
-                    ],
-                  );
-                } else {
-                  Map<String, dynamic> data = snapshot.data!.data()!;
-                  return buildUserProfile(data);
-                }
-              },
-            ),
-            Container(
-              width: MediaQuery.of(context).size.width * 0.94,
-              child: TabBar(
-                  controller: _tabController,
-                  physics: const ClampingScrollPhysics(),
-                  dividerColor: Colors.transparent,
-                  labelColor: Colors.black,
-                  padding:
-                      EdgeInsets.only(top: 10, left: 10, right: 10, bottom: 10),
-                  unselectedLabelColor: Colors.black54,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  tabs: [
-                    Tab(
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            "Subscriptions",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Tab(
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            "Personal Training",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ]),
-            ),
-            Container(
-              width: MediaQuery.of(context).size.width,
-              height: 400,
-              child: TabBarView(controller: _tabController, children: [
-                SingleChildScrollView(
-                  child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: FirebaseFirestore.instance
-                        .collection('Subscriptions')
-                        .where('clientid', isEqualTo: widget.id)
-                        .orderBy('timestamp', descending: true)
-                        .snapshots(),
-                    builder: (context, subscriptionSnapshot) {
-                      if (subscriptionSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return Container();
-                      } else if (subscriptionSnapshot.hasError) {
-                        return Text('Error: ${subscriptionSnapshot.error}');
-                      } else {
-                        List<DocumentSnapshot<Map<String, dynamic>>>
-                            subscriptionDocs = subscriptionSnapshot.data!.docs;
-                        return buildSubscriptionDetails(subscriptionDocs);
+      body: LiquidPullToRefresh(
+        springAnimationDurationInMilliseconds: 500,
+        animSpeedFactor: 2,
+        showChildOpacityTransition: false,
+        onRefresh: _handleRefresh,
+        color: AppColors.primaryBackground,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                future: clientDetails,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const LinearProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else if (!snapshot.hasData || !snapshot.data!.exists) {
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      if (!alreadyUpdated) {
+                        setState(() {
+                          showplus = false;
+                          alreadyUpdated = true;
+                          activeToggle = false;
+                        });
                       }
-                    },
-                  ),
-                ),
-                SingleChildScrollView(
-                  child: StreamBuilder<List<Map<String, dynamic>>>(
-                    stream: fetchPersonalTrainingData(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                            child: SizedBox(
-                                height: 50,
-                                width: 50,
-                                child: CircularProgressIndicator()));
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else if (snapshot.data!.isEmpty) {
-                        return Center(child: Text('No Details Found'));
-                      } else {
-                        List<Map<String, dynamic>> personalTrainingData =
-                            snapshot.data ?? [];
-                        return SizedBox(
+                    });
+                    return const Column(
+                      children: [
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(2.0),
+                          child: Text(
+                            'This Client has been Deleted',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(2.0),
+                          child: Text('Here are his Past Subscriptions'),
+                        ),
+                      ],
+                    );
+                  } else {
+                    Map<String, dynamic> data = snapshot.data!.data()!;
+                    return buildUserProfile(data);
+                  }
+                },
+              ),
+              isvisiblePersonal
+                  ? Column(
+                      children: [
+                        Container(
+                          width: MediaQuery.of(context).size.width * 0.94,
+                          child: TabBar(
+                              controller: _tabController,
+                              physics: const ClampingScrollPhysics(),
+                              dividerColor: Colors.transparent,
+                              labelColor: Colors.black,
+                              padding: EdgeInsets.only(
+                                  top: 10, left: 10, right: 10, bottom: 10),
+                              unselectedLabelColor: Colors.black54,
+                              indicatorSize: TabBarIndicatorSize.label,
+                              tabs: [
+                                Tab(
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "Subscriptions",
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Tab(
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "Personal Training",
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ]),
+                        ),
+                        Container(
+                          width: MediaQuery.of(context).size.width,
                           height: 400,
-                          child: ListView.builder(
-                            itemCount: personalTrainingData.length,
-                            itemBuilder: (context, index) {
-                              return ProgressCardPT(
-                                age: personalTrainingData[index]['age'],
-                                bmi: personalTrainingData[index]['bmi'],
-                                bfp: personalTrainingData[index]['bfp'],
-                                weight: personalTrainingData[index]['weight'],
-                                height: personalTrainingData[index]['height'],
-                                timestamp: personalTrainingData[index]
-                                    ['timestamp'],
-                                bicepmeasure: personalTrainingData[index]
-                                    ['bicepmeasure'],
-                                waistmeasure: personalTrainingData[index]
-                                    ['waistmeasure'],
-                                chestmeasure: personalTrainingData[index]
-                                    ['chestmeasure'],
-                                index: index,
-                                bfpcolor: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]['bfp'] >
-                                            personalTrainingData[index + 1]
-                                                ['bfp']
-                                        ? Colors.red
-                                        : Colors.green)
-                                    : Colors.black,
-                                bmicolor: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]['bmi'] >
-                                            personalTrainingData[index + 1]
-                                                ['bmi']
-                                        ? Colors.red
-                                        : Colors.green)
-                                    : Colors.black,
-                                waistcolor: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]
-                                                ['waistmeasure'] >
-                                            personalTrainingData[index + 1]
-                                                ['waistmeasure']
-                                        ? Colors.red
-                                        : Colors.green)
-                                    : Colors.black,
-                                bicepcolor: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]
-                                                ['bicepmeasure'] >
-                                            personalTrainingData[index + 1]
-                                                ['bicepmeasure']
-                                        ? Colors.green
-                                        : Colors.red)
-                                    : Colors.black,
-                                bfparrow: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]['bfp'] >
-                                            personalTrainingData[index + 1]
-                                                ['bfp']
-                                        ? '↑'
-                                        : '↓')
-                                    : '',
-                                bmiarrow: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]['bmi'] >
-                                            personalTrainingData[index + 1]
-                                                ['bmi']
-                                        ? '↑'
-                                        : '↓')
-                                    : '',
-                                biceparrow: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]
-                                                ['bicepmeasure'] >
-                                            personalTrainingData[index + 1]
-                                                ['bicepmeasure']
-                                        ? '↑'
-                                        : '↓')
-                                    : '',
-                                waistarrow: index == 0 &&
-                                        personalTrainingData.length > 1
-                                    ? (personalTrainingData[index]
-                                                ['waistmeasure'] >
-                                            personalTrainingData[index + 1]
-                                                ['waistmeasure']
-                                        ? '↑'
-                                        : '↓')
-                                    : '',
-                              );
+                          child:
+                              TabBarView(controller: _tabController, children: [
+                            SingleChildScrollView(
+                              child: StreamBuilder<
+                                  QuerySnapshot<Map<String, dynamic>>>(
+                                stream: FirebaseFirestore.instance
+                                    .collection('Subscriptions')
+                                    .where('clientid', isEqualTo: widget.id)
+                                    .orderBy('timestamp', descending: true)
+                                    .snapshots(),
+                                builder: (context, subscriptionSnapshot) {
+                                  if (subscriptionSnapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Container();
+                                  } else if (subscriptionSnapshot.hasError) {
+                                    return Text(
+                                        'Error: ${subscriptionSnapshot.error}');
+                                  } else {
+                                    List<DocumentSnapshot<Map<String, dynamic>>>
+                                        subscriptionDocs =
+                                        subscriptionSnapshot.data!.docs;
+                                    return buildSubscriptionDetails(
+                                        subscriptionDocs);
+                                  }
+                                },
+                              ),
+                            ),
+                            SingleChildScrollView(
+                              child: StreamBuilder<List<Map<String, dynamic>>>(
+                                stream: fetchPersonalTrainingData(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Center(
+                                        child: SizedBox(
+                                            height: 50,
+                                            width: 50,
+                                            child:
+                                                CircularProgressIndicator()));
+                                  } else if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}');
+                                  } else if (snapshot.data!.isEmpty) {
+                                    return Center(
+                                        child: Text('No Details Found'));
+                                  } else {
+                                    List<Map<String, dynamic>>
+                                        personalTrainingData =
+                                        snapshot.data ?? [];
+                                    return SizedBox(
+                                      height: 400,
+                                      child: ListView.builder(
+                                        itemCount: personalTrainingData.length,
+                                        itemBuilder: (context, index) {
+                                          return ProgressCardPT(
+                                            age: personalTrainingData[index]
+                                                ['age'],
+                                            bmi: personalTrainingData[index]
+                                                ['bmi'],
+                                            bfp: personalTrainingData[index]
+                                                ['bfp'],
+                                            weight: personalTrainingData[index]
+                                                ['weight'],
+                                            height: personalTrainingData[index]
+                                                ['height'],
+                                            timestamp:
+                                                personalTrainingData[index]
+                                                    ['timestamp'],
+                                            bicepmeasure:
+                                                personalTrainingData[index]
+                                                    ['bicepmeasure'],
+                                            waistmeasure:
+                                                personalTrainingData[index]
+                                                    ['waistmeasure'],
+                                            chestmeasure:
+                                                personalTrainingData[index]
+                                                    ['chestmeasure'],
+                                            index: index,
+                                            bfpcolor: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['bfp'] >
+                                                        personalTrainingData[
+                                                            index + 1]['bfp']
+                                                    ? Colors.red
+                                                    : Colors.green)
+                                                : Colors.black,
+                                            bmicolor: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['bmi'] >
+                                                        personalTrainingData[
+                                                            index + 1]['bmi']
+                                                    ? Colors.red
+                                                    : Colors.green)
+                                                : Colors.black,
+                                            waistcolor: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['waistmeasure'] >
+                                                        personalTrainingData[
+                                                                index + 1]
+                                                            ['waistmeasure']
+                                                    ? Colors.red
+                                                    : Colors.green)
+                                                : Colors.black,
+                                            bicepcolor: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['bicepmeasure'] >
+                                                        personalTrainingData[
+                                                                index + 1]
+                                                            ['bicepmeasure']
+                                                    ? Colors.green
+                                                    : Colors.red)
+                                                : Colors.black,
+                                            bfparrow: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['bfp'] >
+                                                        personalTrainingData[
+                                                            index + 1]['bfp']
+                                                    ? '↑'
+                                                    : '↓')
+                                                : '',
+                                            bmiarrow: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['bmi'] >
+                                                        personalTrainingData[
+                                                            index + 1]['bmi']
+                                                    ? '↑'
+                                                    : '↓')
+                                                : '',
+                                            biceparrow: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['bicepmeasure'] >
+                                                        personalTrainingData[
+                                                                index + 1]
+                                                            ['bicepmeasure']
+                                                    ? '↑'
+                                                    : '↓')
+                                                : '',
+                                            waistarrow: index == 0 &&
+                                                    personalTrainingData
+                                                            .length >
+                                                        1
+                                                ? (personalTrainingData[index]
+                                                            ['waistmeasure'] >
+                                                        personalTrainingData[
+                                                                index + 1]
+                                                            ['waistmeasure']
+                                                    ? '↑'
+                                                    : '↓')
+                                                : '',
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            )
+                          ]),
+                        )
+                      ],
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                'Subscription Details',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ),
+                          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream: FirebaseFirestore.instance
+                                .collection('Subscriptions')
+                                .where('clientid', isEqualTo: widget.id)
+                                .orderBy('timestamp', descending: true)
+                                .snapshots(),
+                            builder: (context, subscriptionSnapshot) {
+                              if (subscriptionSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Container();
+                              } else if (subscriptionSnapshot.hasError) {
+                                return Text(
+                                    'Error: ${subscriptionSnapshot.error}');
+                              } else {
+                                List<DocumentSnapshot<Map<String, dynamic>>>
+                                    subscriptionDocs =
+                                    subscriptionSnapshot.data!.docs;
+                                return buildSubscriptionDetails(
+                                    subscriptionDocs);
+                              }
                             },
                           ),
-                        );
-                      }
-                    },
-                  ),
-                )
-              ]),
-            )
-          ],
+                        ],
+                      ),
+                    ),
+            ],
+          ),
         ),
       ),
     );
@@ -737,6 +859,7 @@ class _CustomerDetailsState extends State<CustomerDetails>
     String role = GlobalVariablesUse.role;
     Color deleteColor = role == 'Owner' ? Colors.red : Colors.grey;
     Color textColor = role == 'Owner' ? Colors.black : Colors.grey;
+    int memberid = data['memberid'];
 
     DateTime dobDateTime = dob.toDate();
 
@@ -780,103 +903,103 @@ class _CustomerDetailsState extends State<CustomerDetails>
         ),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          child: CachedNetworkImage(
-                            imageUrl: image,
-                            imageBuilder: (context, imageProvider) =>
-                                CircleAvatar(
-                              radius: 40,
-                              backgroundImage: imageProvider,
-                            ),
-                            placeholder: (context, url) => Shimmer.fromColors(
-                              baseColor: Colors.grey[300]!,
-                              highlightColor: Colors.grey[100]!,
-                              child: CircleAvatar(
-                                radius: 40,
-                                backgroundColor: Colors.grey[300],
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => CircleAvatar(
-                              radius: 40,
-                              backgroundColor: Colors.red[300],
-                            ),
+            SizedBox(
+              height: 10,
+            ),
+            Text(
+              'Member ID : $memberid',
+              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+            ),
+            Container(
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      child: CachedNetworkImage(
+                        imageUrl: image,
+                        imageBuilder: (context, imageProvider) => CircleAvatar(
+                          radius: 40,
+                          backgroundImage: imageProvider,
+                        ),
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: CircleAvatar(
+                            radius: 40,
+                            backgroundColor: Colors.grey[300],
                           ),
                         ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(
-                              height: 15,
-                            ),
-                            const Text('Name:',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Color.fromARGB(255, 120, 120, 120),
-                                )),
-                            const SizedBox(height: 3),
-                            Text(name,
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.black)),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            const Text('Contact:',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Color.fromARGB(255, 120, 120, 120),
-                                )),
-                            const SizedBox(height: 3),
-                            Text('+91 ${contact}',
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.black)),
-                            const SizedBox(height: 20),
-                          ],
+                        errorWidget: (context, url, error) => CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.red[300],
                         ),
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         const SizedBox(
-                          width: 10,
+                          height: 15,
                         ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(
-                              height: 15,
-                            ),
-                            const Text('Age:',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Color.fromARGB(255, 120, 120, 120),
-                                )),
-                            const SizedBox(height: 3),
-                            Text('${age.toString()} Yrs',
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.black)),
-                            const SizedBox(height: 10),
-                            const Text('Gender:',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Color.fromARGB(255, 120, 120, 120),
-                                )),
-                            const SizedBox(height: 3),
-                            Text('$gender',
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.black)),
-                            const SizedBox(height: 20),
-                          ],
+                        const Text('Name:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color.fromARGB(255, 120, 120, 120),
+                            )),
+                        const SizedBox(height: 3),
+                        Text(name,
+                            style: const TextStyle(
+                                fontSize: 13, color: Colors.black)),
+                        const SizedBox(
+                          height: 10,
                         ),
-                      ]),
-                ),
-              ),
+                        const Text('Contact:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color.fromARGB(255, 120, 120, 120),
+                            )),
+                        const SizedBox(height: 3),
+                        Text('+91 ${contact}',
+                            style: const TextStyle(
+                                fontSize: 13, color: Colors.black)),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        const Text('Age:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color.fromARGB(255, 120, 120, 120),
+                            )),
+                        const SizedBox(height: 3),
+                        Text('${age.toString()} Yrs',
+                            style: const TextStyle(
+                                fontSize: 13, color: Colors.black)),
+                        const SizedBox(height: 10),
+                        const Text('Gender:',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color.fromARGB(255, 120, 120, 120),
+                            )),
+                        const SizedBox(height: 3),
+                        Text('$gender',
+                            style: const TextStyle(
+                                fontSize: 13, color: Colors.black)),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ]),
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               const Text(
@@ -1053,8 +1176,14 @@ class _CustomerDetailsState extends State<CustomerDetails>
     );
   }
 
-  Future<void> _handleRenewButtonPress(String id, String name, String image,
-      int contact, bool isRenewal, String packageName, int daysleft) async {
+  Future<void> _handleRenewButtonPress(
+      String id,
+      String name,
+      String image,
+      int contact,
+      bool isRenewal,
+      String packageName,
+      int daysleft) async {
     final int subscriptionCount = await _subscriptionCountFuture;
     if (subscriptionCount > 0) {
       Navigator.push(
