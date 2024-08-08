@@ -1,6 +1,6 @@
 # KR Fitness
 
-made by (https://linkedin.com/in/prasadreddy03)[M Sai Prasad]
+made with ❤️ by [GitHub Pages](https://linkedin.com/in/prasadreddy03).
 comprehensive gym management application using Flutter and Dart. The app facilitates seamless management of user subscriptions, fitness goals, and personal training schedules. Integrated Firebase for real-time data storage and retrieval, ensuring efficient handling of user information and subscriptions. Implemented Firebase Cloud Functions to manage backend logic and automate processes.
 
 Tech Stack:
