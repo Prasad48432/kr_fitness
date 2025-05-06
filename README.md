@@ -22,3 +22,8 @@ Designed and developed user interfaces using Flutter
 Integrated Firebase for database management and authentication
 Implemented backend logic with Firebase Cloud Functions
 Conducted thorough testing to ensure app reliability and performance
+
+![image_kr_3](https://github.com/user-attachments/assets/e2b53f3d-6cad-40f9-9fda-bd94d5a49d51)
+![image_kr_2](https://github.com/user-attachments/assets/a3d40d8b-14a2-46a0-8c4c-1064f9f14756)
+![image_kr_1](https://github.com/user-attachments/assets/9013115d-6be5-44d8-9681-33bdc5675dce)
+
